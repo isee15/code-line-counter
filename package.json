@@ -1,0 +1,83 @@
+{
+  "name": "code-line-counter",
+  "displayName": "Code Line Statistics",
+  "description": "统计多个目录中的代码行数",
+  "version": "0.0.1",
+  "publisher": "jiayu",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/isee15/code-line-counter.git"
+  },
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "codeLineCounter.countCodeLines",
+        "title": "Count Code Lines"
+      },
+      {
+        "command": "codeLineCounter.countCodeLinesInFolder",
+        "title": "Count Code Lines in This Folder"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "when": "explorerResourceIsFolder",
+          "command": "codeLineCounter.countCodeLinesInFolder",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Code Line Counter",
+      "properties": {
+        "codeLineCounter.includeDirs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "要统计的目录列表"
+        },
+        "codeLineCounter.excludePatterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "**/node_modules/**",
+            "**/.git/**"
+          ],
+          "description": "要排除的文件或文件夹模式"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "dependencies": {
+    "glob": "^7.1.7"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.75.0",
+    "@types/glob": "^7.1.3",
+    "@types/node": "14.x",
+    "@typescript-eslint/eslint-plugin": "^4.26.0",
+    "@typescript-eslint/parser": "^4.26.0",
+    "eslint": "^7.27.0",
+    "typescript": "^4.3.2"
+  }
+}
