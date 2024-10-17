@@ -2,7 +2,7 @@
   "name": "code-line-counter",
   "displayName": "Code Line Statistics",
   "description": "统计多个目录中的代码行数",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "publisher": "jiayu",
   "engines": {
     "vscode": "^1.75.0"
