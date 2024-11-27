@@ -1,0 +1,14 @@
+/* 示例自定义样式 */
+body {
+    background-color: #f0f0f0; /* 设置背景颜色 */
+    color: #333; /* 设置文本颜色 */
+}
+
+h1 {
+    font-size: 2em; /* 设置标题字体大小 */
+    color: #007bff; /* 设置标题颜色 */
+}
+
+p {
+    line-height: 1.5; /* 设置段落行高 */
+} 
