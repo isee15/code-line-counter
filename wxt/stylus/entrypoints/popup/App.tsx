@@ -83,14 +83,17 @@ function App() {
   const [status, setStatus] = useState('');
 
   useEffect(() => {
-    // 加载保存的样式表
-    const savedStyles = localStorage.getItem('stylus-sheets');
-    if (savedStyles) {
-      setStyleSheets(JSON.parse(savedStyles));
-    } else {
-      // 首次使用时加载预设模板
-      setStyleSheets(DEFAULT_TEMPLATES);
-    }
+    // 从 chrome.storage.local 加载样式
+    chrome.storage.local.get('stylus-sheets').then(result => {
+      const savedStyles = result['stylus-sheets'];
+      if (savedStyles) {
+        setStyleSheets(savedStyles);
+      } else {
+        // 首次使用时加载预设模板
+        setStyleSheets(DEFAULT_TEMPLATES);
+        chrome.storage.local.set({ 'stylus-sheets': DEFAULT_TEMPLATES });
+      }
+    });
   }, []);
 
   const handleSave = async () => {
@@ -101,12 +104,12 @@ function App() {
         sheet.id === selectedSheet.id ? selectedSheet : sheet
       );
       setStyleSheets(updatedSheets);
-      localStorage.setItem('stylus-sheets', JSON.stringify(updatedSheets));
-
-      // 获取当前标签页
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
       
-      // 发送消息到content script
+      // 保存到 chrome.storage.local
+      await chrome.storage.local.set({ 'stylus-sheets': updatedSheets });
+
+      // 获取当前标签页并发送消息
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
       if (tab.id) {
         await chrome.tabs.sendMessage(tab.id, {
           type: 'UPDATE_STYLES',
@@ -119,44 +122,45 @@ function App() {
     }
   };
 
-  const handleToggleSheet = (sheetId: string) => {
+  const handleToggleSheet = async (sheetId: string) => {
     const updatedSheets = styleSheets.map(sheet =>
       sheet.id === sheetId ? { ...sheet, enabled: !sheet.enabled } : sheet
     );
     setStyleSheets(updatedSheets);
-    localStorage.setItem('stylus-sheets', JSON.stringify(updatedSheets));
+    
+    // 保存到 chrome.storage.local
+    await chrome.storage.local.set({ 'stylus-sheets': updatedSheets });
 
-    // 如果当前选中的样式表被禁用，更新编辑器
     if (selectedSheet?.id === sheetId) {
       setSelectedSheet({ ...selectedSheet, enabled: !selectedSheet.enabled });
     }
 
     // 通知content script更新样式
-    chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
-      if (tab.id) {
-        chrome.tabs.sendMessage(tab.id, {
-          type: 'UPDATE_STYLES',
-          styles: updatedSheets
-        });
-      }
-    });
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tab.id) {
+      chrome.tabs.sendMessage(tab.id, {
+        type: 'UPDATE_STYLES'
+      });
+    }
   };
 
-  const handleAddNew = () => {
+  const handleAddNew = async () => {
     const newSheet: StyleSheet = {
       id: `sheet-${Date.now()}`,
       name: '新样式表',
       css: '',
       enabled: true
     };
-    setStyleSheets([...styleSheets, newSheet]);
+    const updatedSheets = [...styleSheets, newSheet];
+    setStyleSheets(updatedSheets);
+    await chrome.storage.local.set({ 'stylus-sheets': updatedSheets });
     setSelectedSheet(newSheet);
   };
 
-  const handleDelete = (sheetId: string) => {
+  const handleDelete = async (sheetId: string) => {
     const updatedSheets = styleSheets.filter(sheet => sheet.id !== sheetId);
     setStyleSheets(updatedSheets);
-    localStorage.setItem('stylus-sheets', JSON.stringify(updatedSheets));
+    await chrome.storage.local.set({ 'stylus-sheets': updatedSheets });
     if (selectedSheet?.id === sheetId) {
       setSelectedSheet(null);
     }

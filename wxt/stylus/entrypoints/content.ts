@@ -9,41 +9,35 @@ interface StyleSheet {
 export default defineContentScript({
   matches: ['<all_urls>'],
   main() {
-    // 为每个样式表创建一个style元素
     const styleElements: Record<string, HTMLStyleElement> = {};
 
-    // 从localStorage获取并应用CSS
-    const applyStyles = () => {
-      const savedStyles = localStorage.getItem('stylus-sheets');
-      if (!savedStyles) return;
-
-      const styleSheets: StyleSheet[] = JSON.parse(savedStyles);
+    const applyStyles = async () => {
+      // 从 chrome.storage.local 获取样式
+      const result = await chrome.storage.local.get('stylus-sheets');
+      const styleSheets: StyleSheet[] = result['stylus-sheets'] || [];
       
-      // 清理已删除的样式表
-      Object.keys(styleElements).forEach(id => {
+      // 使用 for...of 替代 forEach
+      for (const id of Object.keys(styleElements)) {
         if (!styleSheets.find(sheet => sheet.id === id)) {
           styleElements[id].remove();
           delete styleElements[id];
         }
-      });
+      }
 
-      // 应用或更新样式表
-      styleSheets.forEach(sheet => {
+      // 应用样式
+      for (const sheet of styleSheets) {
         if (!sheet.enabled) {
-          // 如果样式表被禁用，移除对应的style元素
           if (styleElements[sheet.id]) {
             styleElements[sheet.id].remove();
             delete styleElements[sheet.id];
           }
-          return;
+          continue;
         }
 
-        // 如果存在URL匹配模式且不匹配当前页面，跳过
         if (sheet.url && !location.href.match(new RegExp(sheet.url))) {
-          return;
+          continue;
         }
 
-        // 创建或更新style元素
         if (!styleElements[sheet.id]) {
           const element = document.createElement('style');
           element.id = `stylus-${sheet.id}`;
@@ -51,13 +45,12 @@ export default defineContentScript({
           styleElements[sheet.id] = element;
         }
         styleElements[sheet.id].textContent = sheet.css;
-      });
+      }
     };
 
     // 监听来自popup的消息
     chrome.runtime.onMessage.addListener((message) => {
       if (message.type === 'UPDATE_STYLES') {
-        localStorage.setItem('stylus-sheets', JSON.stringify(message.styles));
         applyStyles();
       }
     });
