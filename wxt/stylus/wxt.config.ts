@@ -5,8 +5,17 @@ export default defineConfig({
   manifest: {
     name: 'Stylus',
     description: '自定义网站CSS样式的浏览器扩展',
-    permissions: ['activeTab', 'storage'],
-    host_permissions: ['<all_urls>']
+    permissions: [
+      'activeTab', 
+      'storage',
+      'scripting',
+      'webNavigation'
+    ],
+    host_permissions: ['<all_urls>'],
+    web_accessible_resources: [{
+      resources: ['vconsole.bundle.js'],
+      matches: ['<all_urls>']
+    }]
   },
   modules: ['@wxt-dev/module-react'],
 });

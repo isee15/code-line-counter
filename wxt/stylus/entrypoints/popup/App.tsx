@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import './App.css';
-import type { EditorView } from '@codemirror/view';
 import CodeMirror from '@uiw/react-codemirror';
 import { css } from '@codemirror/lang-css';
 import { vscodeDark } from '@uiw/codemirror-theme-vscode';
@@ -11,6 +10,16 @@ interface StyleSheet {
   css: string;
   enabled: boolean;
   url?: string;
+}
+
+interface ResourceRule {
+  id: string;
+  enabled: boolean;
+  url: string;
+  contentType: string;
+  type: 'block' | 'modify' | 'inject';
+  content?: string;
+  function?: string;
 }
 
 const DEFAULT_TEMPLATES: StyleSheet[] = [
@@ -81,6 +90,9 @@ function App() {
   const [styleSheets, setStyleSheets] = useState<StyleSheet[]>([]);
   const [selectedSheet, setSelectedSheet] = useState<StyleSheet | null>(null);
   const [status, setStatus] = useState('');
+  const [showRules, setShowRules] = useState(false);
+  const [rules, setRules] = useState<ResourceRule[]>([]);
+  const [selectedRule, setSelectedRule] = useState<ResourceRule | null>(null);
 
   useEffect(() => {
     // 从 chrome.storage.local 加载样式
@@ -93,6 +105,11 @@ function App() {
         setStyleSheets(DEFAULT_TEMPLATES);
         chrome.storage.local.set({ 'stylus-sheets': DEFAULT_TEMPLATES });
       }
+    });
+
+    // 加载资源规则
+    chrome.storage.local.get('resource-rules').then((result) => {
+      setRules(result['resource-rules'] || []);
     });
   }, []);
 
@@ -170,88 +187,334 @@ function App() {
     setSelectedSheet(sheet);
   };
 
-  const handleKeyPress = (event: React.KeyboardEvent, sheet: StyleSheet) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      handleSheetSelect(sheet);
-    }
+  // 资源规则相关函数
+  const saveRules = async (updatedRules: ResourceRule[]) => {
+    await chrome.storage.local.set({ 'resource-rules': updatedRules });
+    chrome.runtime.sendMessage({ type: 'UPDATE_RULES' });
+    setRules(updatedRules);
+  };
+
+  const handleRuleSelect = (rule: ResourceRule) => {
+    setSelectedRule(selectedRule?.id === rule.id ? null : rule);
+  };
+
+  const updateSelectedRule = (updates: Partial<ResourceRule>) => {
+    if (!selectedRule) return;
+    const updatedRule = { ...selectedRule, ...updates };
+    saveRules(rules.map(rule => 
+      rule.id === selectedRule.id ? updatedRule : rule
+    ));
+    setSelectedRule(updatedRule);
+  };
+
+  const toggleRule = (id: string) => {
+    saveRules(rules.map(rule => 
+      rule.id === id ? { ...rule, enabled: !rule.enabled } : rule
+    ));
   };
 
   return (
-    <div className="container">
-      <h1>Stylus</h1>
-      
-      <div className="sidebar">
-        <button type="button" onClick={handleAddNew} className="add-button">
-          新建样式表
-        </button>
-        <div className="style-list">
-          {styleSheets.map(sheet => (
-            <div
-              key={sheet.id}
-              className={`style-item ${selectedSheet?.id === sheet.id ? 'selected' : ''}`}
-            >
-              <label className="style-name">
-                <input
-                  type="checkbox"
-                  checked={sheet.enabled}
-                  onChange={() => handleToggleSheet(sheet.id)}
-                />
-                <button
-                  type="button"
-                  onClick={() => handleSheetSelect(sheet)}
-                  className="sheet-name-button"
-                >
-                  {sheet.name}
-                </button>
-              </label>
-              <button
-                type="button"
-                onClick={() => handleDelete(sheet.id)}
-                className="delete-button"
-              >
-                删除
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
+    <div className="app-container">
+      <header className="app-header">
+        <h1 className="app-title">资源管理器</h1>
+        <nav className="tab-nav">
+          <button 
+            type="button"
+            className={`tab-button ${!showRules ? 'active' : ''}`}
+            onClick={() => setShowRules(false)}
+          >
+            <span className="icon">🎨</span>
+            样式管理
+          </button>
+          <button 
+            type="button"
+            className={`tab-button ${showRules ? 'active' : ''}`}
+            onClick={() => setShowRules(true)}
+          >
+            <span className="icon">⚙️</span>
+            资源管理
+          </button>
+        </nav>
+      </header>
 
-      {selectedSheet && (
-        <div className="editor-section">
-          <input
-            type="text"
-            value={selectedSheet.name}
-            onChange={(e) => setSelectedSheet({
-              ...selectedSheet,
-              name: e.target.value
-            })}
-            className="style-title"
-          />
-          <CodeMirror
-            value={selectedSheet.css}
-            height="300px"
-            theme={vscodeDark}
-            extensions={[css()]}
-            onChange={(value: string) => setSelectedSheet({
-              ...selectedSheet,
-              css: value
-            })}
-          />
-          <div className="controls">
-            <button
-              type="button"
-              onClick={handleSave}
-              className="save-button"
-              disabled={!selectedSheet.enabled}
-            >
-              保存样式
-            </button>
-            {status && <div className="status">{status}</div>}
+      <main className="app-content">
+        {!showRules ? (
+          <div className="styles-panel">
+            <aside className="styles-sidebar">
+              <button 
+                type="button" 
+                onClick={handleAddNew} 
+                className="create-button"
+              >
+                <span className="icon">+</span>
+                新建样式表
+              </button>
+              
+              <div className="style-list">
+                {styleSheets.map(sheet => (
+                  <div
+                    key={sheet.id}
+                    className={`style-card ${selectedSheet?.id === sheet.id ? 'selected' : ''}`}
+                    onClick={() => handleSheetSelect(sheet)}
+                  >
+                    <div className="style-card-header">
+                      <label className="toggle">
+                        <input
+                          type="checkbox"
+                          checked={sheet.enabled}
+                          onChange={() => handleToggleSheet(sheet.id)}
+                        />
+                        <span className="toggle-slider" />
+                      </label>
+                      <span className="style-name">{sheet.name}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(sheet.id);
+                      }}
+                      className="delete-button"
+                      title="删除"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </aside>
+
+            {selectedSheet && (
+              <section className="editor-container">
+                <div className="editor-header">
+                  <input
+                    type="text"
+                    value={selectedSheet.name}
+                    onChange={(e) => setSelectedSheet({
+                      ...selectedSheet,
+                      name: e.target.value
+                    })}
+                    className="sheet-name-input"
+                    placeholder="输入样式表名称"
+                  />
+                </div>
+                
+                <div className="editor-wrapper">
+                  <CodeMirror
+                    value={selectedSheet.css}
+                    height="100%"
+                    theme={vscodeDark}
+                    extensions={[css()]}
+                    onChange={(value: string) => setSelectedSheet({
+                      ...selectedSheet,
+                      css: value
+                    })}
+                  />
+                </div>
+
+                <div className="editor-footer">
+                  <button
+                    type="button"
+                    onClick={handleSave}
+                    className={`save-button ${!selectedSheet.enabled ? 'disabled' : ''}`}
+                    disabled={!selectedSheet.enabled}
+                  >
+                    保存样式
+                  </button>
+                  {status && <div className="status-message">{status}</div>}
+                </div>
+              </section>
+            )}
           </div>
-        </div>
-      )}
+        ) : (
+          // 资源管理界面
+          <div className="rules-container">
+            <div className="sidebar">
+              <button 
+                type="button" 
+                onClick={() => {
+                  const newRule: ResourceRule = {
+                    id: Date.now().toString(),
+                    enabled: true,
+                    url: '',
+                    contentType: 'application/javascript',
+                    type: 'block'
+                  };
+                  saveRules([...rules, newRule]);
+                  setSelectedRule(newRule);
+                }} 
+                className="add-button"
+              >
+                新建规则
+              </button>
+              <div className="rule-list">
+                {rules.map(rule => (
+                  <button
+                    key={rule.id}
+                    type="button"
+                    className={`rule-item ${selectedRule?.id === rule.id ? 'selected' : ''}`}
+                    onClick={() => handleRuleSelect(rule)}
+                  >
+                    <div className="rule-name">
+                      <label className="switch">
+                        <input
+                          type="checkbox"
+                          checked={rule.enabled}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            toggleRule(rule.id);
+                          }}
+                        />
+                        <span className="slider" />
+                      </label>
+                      <span className="rule-url">{rule.url || (rule.id === 'vconsole' ? '调试面板' : '新规则')}</span>
+                    </div>
+                    {rule.id !== 'vconsole' && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const updatedRules = rules.filter(r => r.id !== rule.id);
+                          saveRules(updatedRules);
+                        }}
+                        className="delete-button"
+                        title="删除"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {selectedRule && (
+              <div className="editor-section">
+                {selectedRule.id === 'vconsole' ? (
+                  <div className="form-group">
+                    <p>这是一个内置规则，用于在网页中注入调试面板。启用此规则后，将在所有网页中显示调试面板。</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="form-group">
+                      <label htmlFor="rule-url">URL 匹配模式（正则表达式）</label>
+                      <input
+                        id="rule-url"
+                        type="text"
+                        value={selectedRule.url}
+                        onChange={e => updateSelectedRule({ url: e.target.value })}
+                        placeholder="例如：.*\.js$"
+                      />
+                    </div>
+                    
+                    <div className="form-group">
+                      <label htmlFor="rule-content-type">内容类型</label>
+                      <select
+                        id="rule-content-type"
+                        value={selectedRule.contentType}
+                        onChange={e => updateSelectedRule({ contentType: e.target.value })}
+                      >
+                        <option value="application/javascript">JavaScript</option>
+                        <option value="text/html">HTML</option>
+                        <option value="text/css">CSS</option>
+                        <option value="application/json">JSON</option>
+                        <option value="text/plain">Text</option>
+                        <option value="image/*">Image</option>
+                        <option value="application/xml">XML</option>
+                        <option value="application/x-www-form-urlencoded">Form Data</option>
+                        <option value="*/*">All Types</option>
+                      </select>
+                    </div>
+
+                    <div className="form-group">
+                      <label htmlFor="rule-type">规则类型</label>
+                      <select
+                        id="rule-type"
+                        value={selectedRule.type}
+                        onChange={e => updateSelectedRule({ type: e.target.value as ResourceRule['type'] })}
+                      >
+                        <option value="block">阻止加载</option>
+                        <option value="modify">修改内容</option>
+                        <option value="inject">注入函数</option>
+                      </select>
+                    </div>
+
+                    {selectedRule.type === 'modify' && (
+                      <div className="form-group">
+                        <label htmlFor="rule-content">
+                          替换内容
+                          <span className="label-hint">（将匹配到的资源内容替换为以下内容）</span>
+                        </label>
+                        <div className="example-block">
+                          <p>示例：</p>
+                          <ul>
+                            <li>替换JS：<code>console.log('已被修改');</code></li>
+                            <li>替换CSS：<code>{`body { background: #fff !important; }`}</code></li>
+                            <li>替换HTML：<code>&lt;div&gt;已被修改&lt;/div&gt;</code></li>
+                            <li>替换JSON：<code>{`{"message": "已被修改"}`}</code></li>
+                          </ul>
+                        </div>
+                        <textarea
+                          id="rule-content"
+                          value={selectedRule.content || ''}
+                          onChange={e => updateSelectedRule({ content: e.target.value })}
+                          placeholder="输入要替换的内容"
+                        />
+                      </div>
+                    )}
+
+                    {selectedRule.type === 'inject' && (
+                      <div className="form-group">
+                        <label htmlFor="rule-function">
+                          注入函数
+                          <span className="label-hint">（在页面上下文中执行的函数代码）</span>
+                        </label>
+                        <div className="example-block">
+                          <p>示例：</p>
+                          <ul>
+                            <li>
+                              <p>修改页面元素：</p>
+                              <pre>{`function() {
+  const elements = document.querySelectorAll('.ad-banner');
+  elements.forEach(el => el.style.display = 'none');
+}`}</pre>
+                            </li>
+                            <li>
+                              <p>注入自定义脚本：</p>
+                              <pre>{`function() {
+  const script = document.createElement('script');
+  script.textContent = 'console.log("注入的脚本已执行");';
+  document.head.appendChild(script);
+}`}</pre>
+                            </li>
+                            <li>
+                              <p>监听页面事件：</p>
+                              <pre>{`function() {
+  window.addEventListener('load', () => {
+    console.log('页面加载完成');
+  });
+}`}</pre>
+                            </li>
+                          </ul>
+                        </div>
+                        <textarea
+                          id="rule-function"
+                          value={selectedRule.function || ''}
+                          onChange={e => updateSelectedRule({ function: e.target.value })}
+                          placeholder="输入要注入的函数代码"
+                        />
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </main>
     </div>
   );
 }
 
 export default App;
+
