@@ -20,6 +20,8 @@ interface ResourceRule {
   type: 'block' | 'modify' | 'inject';
   content?: string;
   function?: string;
+  name: string;
+  description?: string;
 }
 
 const DEFAULT_TEMPLATES: StyleSheet[] = [
@@ -86,6 +88,133 @@ input, textarea, select {
   }
 ];
 
+const DEFAULT_RULES: ResourceRule[] = [
+  {
+    id: 'vconsole',
+    enabled: false,
+    url: '.*',
+    contentType: 'text/html',
+    type: 'inject',
+    name: 'vConsole调试面板',
+    description: '在网页中注入调试工具，用于移动端调试'
+  },
+  {
+    id: 'block-analytics',
+    enabled: false,
+    url: '.*(google-analytics\\.com|googletagmanager\\.com|umeng\\.com|cnzz\\.com|baidu\\.com/hm\\.js).*',
+    contentType: '*/*',
+    type: 'block',
+    name: '拦截数据统计',
+    description: '阻止常见的网站统计和分析脚本'
+  },
+  {
+    id: 'block-ads',
+    enabled: false,
+    url: '.*(pagead2\\.googlesyndication\\.com|ads\\.google\\.com|adservice\\.google\\.com|doubleclick\\.net).*',
+    contentType: '*/*',
+    type: 'block',
+    name: '拦截广告请求',
+    description: '阻止常见的广告加载请求'
+  },
+  {
+    id: 'dark-mode',
+    enabled: false,
+    url: '.*',
+    contentType: 'text/html',
+    type: 'inject',
+    function: `function() {
+      document.documentElement.style.filter = 'invert(1) hue-rotate(180deg)';
+      document.querySelectorAll('img, video, canvas').forEach(el => {
+        el.style.filter = 'invert(1) hue-rotate(180deg)';
+      });
+    }`,
+    name: '全局深色模式',
+    description: '将所有网页转换为深色模式'
+  },
+  {
+    id: 'block-social',
+    enabled: false,
+    url: '.*(facebook\\.com|twitter\\.com|linkedin\\.com|weibo\\.com)/.*\\.(js|html)',
+    contentType: '*/*',
+    type: 'block',
+    name: '拦截社交组件',
+    description: '阻止社交媒体分享按钮和跟踪组件'
+  },
+  {
+    id: 'block-video-ads',
+    enabled: false,
+    url: '.*(doubleclick\\.net|\\.googlevideo\\.com/videoplayback\\?.*ctier=L|.*\\.com\\.\\w+/videos/other/.*)',
+    contentType: '*/*',
+    type: 'block',
+    name: '拦截视频广告',
+    description: '阻止视频网站的广告内容'
+  },
+  {
+    id: 'reading-mode',
+    enabled: false,
+    url: '.*',
+    contentType: 'text/html',
+    type: 'inject',
+    function: `function() {
+      const style = document.createElement('style');
+      style.textContent = \`
+        body {
+          max-width: 800px !important;
+          margin: 0 auto !important;
+          padding: 20px !important;
+          font-size: 18px !important;
+          line-height: 1.6 !important;
+          background: #fff !important;
+          color: #333 !important;
+        }
+        img { max-width: 100% !important; height: auto !important; }
+      \`;
+      document.head.appendChild(style);
+    }`,
+    name: '阅读模式',
+    description: '优化页面布局，提供更好的阅读体验'
+  },
+  {
+    id: 'block-cookie-notices',
+    enabled: false,
+    url: '.*(cookie-notice|cookie-consent|cookie-law|gdpr).*\\.(js|css)',
+    contentType: '*/*',
+    type: 'block',
+    name: '拦截Cookie提示',
+    description: '阻止烦人的Cookie政策提示框'
+  },
+  {
+    id: 'block-chat-widgets',
+    enabled: false,
+    url: '.*(intercom\\.com|drift\\.com|tawk\\.to|crisp\\.chat|livechat\\.).*',
+    contentType: '*/*',
+    type: 'block',
+    name: '拦截聊天组件',
+    description: '阻止网页客服聊天窗口'
+  },
+  {
+    id: 'anti-debugger',
+    enabled: false,
+    url: '.*',
+    contentType: 'text/html',
+    type: 'inject',
+    function: `function() {
+      const noop = () => {};
+      Object.defineProperty(window, 'debugger', { get: noop, set: noop });
+      setInterval(() => {
+        const before = Date.now();
+        debugger;
+        const after = Date.now();
+        if (after - before > 100) {
+          console.log('检测到调试器暂停，已阻止');
+        }
+      }, 500);
+    }`,
+    name: '反调试保护',
+    description: '阻止网页的反调试措施'
+  }
+];
+
 function App() {
   const [styleSheets, setStyleSheets] = useState<StyleSheet[]>([]);
   const [selectedSheet, setSelectedSheet] = useState<StyleSheet | null>(null);
@@ -109,7 +238,20 @@ function App() {
 
     // 加载资源规则
     chrome.storage.local.get('resource-rules').then((result) => {
-      setRules(result['resource-rules'] || []);
+      const savedRules = result['resource-rules'] || [];
+      // 确保默认规则存在
+      const mergedRules = [...DEFAULT_RULES];
+      
+      // 添加用户自定义规则
+      savedRules.forEach(rule => {
+        if (!DEFAULT_RULES.find(defaultRule => defaultRule.id === rule.id)) {
+          mergedRules.push(rule);
+        }
+      });
+
+      setRules(mergedRules);
+      // 保存合并后的规则
+      chrome.storage.local.set({ 'resource-rules': mergedRules });
     });
   }, []);
 
@@ -211,6 +353,19 @@ function App() {
     saveRules(rules.map(rule => 
       rule.id === id ? { ...rule, enabled: !rule.enabled } : rule
     ));
+  };
+
+  const handleAddRule = () => {
+    const newRule: ResourceRule = {
+      id: Date.now().toString(),
+      enabled: true,
+      url: '',
+      contentType: 'application/javascript',
+      type: 'block',
+      name: '新规则'
+    };
+    saveRules([...rules, newRule]);
+    setSelectedRule(newRule);
   };
 
   return (
@@ -329,67 +484,81 @@ function App() {
         ) : (
           // 资源管理界面
           <div className="rules-container">
-            <div className="sidebar">
+            <aside className="rules-sidebar">
               <button 
                 type="button" 
-                onClick={() => {
-                  const newRule: ResourceRule = {
-                    id: Date.now().toString(),
-                    enabled: true,
-                    url: '',
-                    contentType: 'application/javascript',
-                    type: 'block'
-                  };
-                  saveRules([...rules, newRule]);
-                  setSelectedRule(newRule);
-                }} 
-                className="add-button"
+                onClick={handleAddRule} 
+                className="create-button"
               >
+                <span className="icon">+</span>
                 新建规则
               </button>
               <div className="rule-list">
-                {rules.map(rule => (
-                  <button
-                    key={rule.id}
-                    type="button"
-                    className={`rule-item ${selectedRule?.id === rule.id ? 'selected' : ''}`}
-                    onClick={() => handleRuleSelect(rule)}
-                  >
-                    <div className="rule-name">
-                      <label className="switch">
-                        <input
-                          type="checkbox"
-                          checked={rule.enabled}
-                          onChange={(e) => {
+                {rules.map(rule => {
+                  const isBuiltin = DEFAULT_RULES.find(r => r.id === rule.id);
+                  return (
+                    <div
+                      key={rule.id}
+                      className={`rule-card ${selectedRule?.id === rule.id ? 'selected' : ''}`}
+                      onClick={() => handleRuleSelect(rule)}
+                      data-builtin={isBuiltin ? 'true' : 'false'}
+                    >
+                      <div className="rule-card-header">
+                        <label className="toggle">
+                          <input
+                            type="checkbox"
+                            checked={rule.enabled}
+                            onChange={(e) => {
+                              e.stopPropagation();
+                              toggleRule(rule.id);
+                            }}
+                          />
+                          <span className="toggle-slider" />
+                        </label>
+                        <div className="rule-info">
+                          <span 
+                            className="rule-title" 
+                            title={rule.name}
+                          >
+                            {rule.name || '未命名规则'}
+                          </span>
+                          {rule.url && (
+                            <span 
+                              className="rule-url"
+                              title={rule.url}
+                            >
+                              {rule.url}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      {!isBuiltin && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
                             e.stopPropagation();
-                            toggleRule(rule.id);
+                            const updatedRules = rules.filter(r => r.id !== rule.id);
+                            saveRules(updatedRules);
                           }}
-                        />
-                        <span className="slider" />
-                      </label>
-                      <span className="rule-url">{rule.url || (rule.id === 'vconsole' ? '调试面板' : '新规则')}</span>
+                          className="delete-button"
+                          title="删除"
+                        >
+                          ×
+                        </button>
+                      )}
                     </div>
-                    {rule.id !== 'vconsole' && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const updatedRules = rules.filter(r => r.id !== rule.id);
-                          saveRules(updatedRules);
-                        }}
-                        className="delete-button"
-                        title="删除"
-                      >
-                        ×
-                      </button>
-                    )}
-                  </button>
-                ))}
+                  );
+                })}
               </div>
-            </div>
+            </aside>
 
             {selectedRule && (
-              <div className="editor-section">
+              <section className="editor-section">
+                {selectedRule.description && (
+                  <div className="rule-description">
+                    <p>{selectedRule.description}</p>
+                  </div>
+                )}
                 {selectedRule.id === 'vconsole' ? (
                   <div className="form-group">
                     <p>这是一个内置规则，用于在网页中注入调试面板。启用此规则后，将在所有网页中显示调试面板。</p>
@@ -507,7 +676,7 @@ function App() {
                     )}
                   </>
                 )}
-              </div>
+              </section>
             )}
           </div>
         )}
