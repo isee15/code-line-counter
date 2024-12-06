@@ -368,7 +368,8 @@ input:checked + .toggle-slider:before {
 }
 
 .form-group textarea {
-  min-height: 120px;
+  min-height: 200px;
+  height: 300px;
   resize: vertical;
   font-family: monospace;
 }

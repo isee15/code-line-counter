@@ -243,11 +243,16 @@ function App() {
       const mergedRules = [...DEFAULT_RULES];
       
       // 添加用户自定义规则
-      savedRules.forEach(rule => {
+      for (const rule of savedRules) {
         if (!DEFAULT_RULES.find(defaultRule => defaultRule.id === rule.id)) {
           mergedRules.push(rule);
+        } else {
+          const existingRule = mergedRules.find(r => r.id === rule.id);
+          if (existingRule) {
+            existingRule.enabled = rule.enabled;
+          }
         }
-      });
+      }
 
       setRules(mergedRules);
       // 保存合并后的规则

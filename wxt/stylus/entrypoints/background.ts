@@ -78,11 +78,25 @@ export default defineBackground(() => {
         });
         log('vConsole bundle注入完成');
       } else if (rule.function) {
-        // 对于其他注入规则，使用func选项
+        // 对于其他注入规则，直接注入代码
         log('注入自定义函数');
         await chrome.scripting.executeScript({
           target: { tabId },
-          func: new Function(rule.function) as () => void
+          func: (functionContent: string) => {
+            const scriptElement = document.createElement('script');
+            // 使用更可靠的方式包装和执行代码
+            scriptElement.textContent = `
+              try {
+                (${functionContent})();
+              } catch (e) {
+                console.error('Injection script error:', e);
+              }
+            `;
+            (document.head || document.documentElement).appendChild(scriptElement);
+            scriptElement.remove();
+          },
+          args: [rule.function],
+          world: 'MAIN'
         });
         log('自定义函数注入完成');
       }
