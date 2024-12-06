@@ -3,6 +3,8 @@ import './App.css';
 import CodeMirror from '@uiw/react-codemirror';
 import { css } from '@codemirror/lang-css';
 import { vscodeDark } from '@uiw/codemirror-theme-vscode';
+import { t, setLocale, getLocale, initLocale } from '../../src/i18n/locales';
+import type { LocaleKey } from '../../src/i18n/locales';
 
 interface StyleSheet {
   id: string;
@@ -215,16 +217,23 @@ const DEFAULT_RULES: ResourceRule[] = [
   }
 ];
 
-function App() {
+export default function App() {
   const [styleSheets, setStyleSheets] = useState<StyleSheet[]>([]);
   const [selectedSheet, setSelectedSheet] = useState<StyleSheet | null>(null);
   const [status, setStatus] = useState('');
   const [showRules, setShowRules] = useState(false);
   const [rules, setRules] = useState<ResourceRule[]>([]);
   const [selectedRule, setSelectedRule] = useState<ResourceRule | null>(null);
+  const [locale, setCurrentLocale] = useState<LocaleKey>(getLocale());
 
+  // 初始化
   useEffect(() => {
-    // 从 chrome.storage.local 加载样式
+    // 初始化语言设置
+    initLocale().then(() => {
+      setCurrentLocale(getLocale());
+    });
+
+    // 加载样式表和规则
     chrome.storage.local.get('stylus-sheets').then(result => {
       const savedStyles = result['stylus-sheets'];
       if (savedStyles) {
@@ -259,6 +268,29 @@ function App() {
       chrome.storage.local.set({ 'resource-rules': mergedRules });
     });
   }, []);
+
+  // 切换语言
+  const toggleLocale = () => {
+    // 定义语言循环顺序
+    const localeOrder: LocaleKey[] = ['zh-CN', 'zh-TW', 'ja', 'ko', 'en-US'];
+    const currentIndex = localeOrder.indexOf(locale);
+    const nextIndex = (currentIndex + 1) % localeOrder.length;
+    const newLocale = localeOrder[nextIndex];
+    setLocale(newLocale);
+    setCurrentLocale(newLocale);
+  };
+
+  // 获取语言显示文本
+  const getLocaleDisplayText = (locale: LocaleKey): string => {
+    const localeTexts: Record<LocaleKey, string> = {
+      'zh-CN': '简体中文',
+      'zh-TW': '繁體中文',
+      'ja': '日本語',
+      'ko': '한국어',
+      'en-US': 'English'
+    };
+    return localeTexts[locale];
+  };
 
   const handleSave = async () => {
     try {
@@ -376,7 +408,25 @@ function App() {
   return (
     <div className="app-container">
       <header className="app-header">
-        <h1 className="app-title">资源管理器</h1>
+        <div className="header-content">
+          <h1 className="app-title">{t('app.title')}</h1>
+          <select
+            value={locale}
+            onChange={(e) => {
+              const newLocale = e.target.value as LocaleKey;
+              setLocale(newLocale);
+              setCurrentLocale(newLocale);
+            }}
+            className="language-select"
+            title={t('app.switchLanguage')}
+          >
+            <option value="zh-CN">{getLocaleDisplayText('zh-CN')}</option>
+            <option value="zh-TW">{getLocaleDisplayText('zh-TW')}</option>
+            <option value="ja">{getLocaleDisplayText('ja')}</option>
+            <option value="ko">{getLocaleDisplayText('ko')}</option>
+            <option value="en-US">{getLocaleDisplayText('en-US')}</option>
+          </select>
+        </div>
         <nav className="tab-nav">
           <button 
             type="button"
@@ -384,7 +434,7 @@ function App() {
             onClick={() => setShowRules(false)}
           >
             <span className="icon">🎨</span>
-            样式管理
+            {t('app.styleManager')}
           </button>
           <button 
             type="button"
@@ -392,7 +442,7 @@ function App() {
             onClick={() => setShowRules(true)}
           >
             <span className="icon">⚙️</span>
-            资源管理
+            {t('app.resourceManager')}
           </button>
         </nav>
       </header>
@@ -407,7 +457,7 @@ function App() {
                 className="create-button"
               >
                 <span className="icon">+</span>
-                新建样式表
+                {t('style.newStyleSheet')}
               </button>
               
               <div className="style-list">
@@ -435,7 +485,7 @@ function App() {
                         handleDelete(sheet.id);
                       }}
                       className="delete-button"
-                      title="删除"
+                      title={t('common.delete')}
                     >
                       ×
                     </button>
@@ -455,7 +505,7 @@ function App() {
                       name: e.target.value
                     })}
                     className="sheet-name-input"
-                    placeholder="输入样式表名称"
+                    placeholder={t('style.enterStyleName')}
                   />
                 </div>
                 
@@ -479,7 +529,7 @@ function App() {
                     className={`save-button ${!selectedSheet.enabled ? 'disabled' : ''}`}
                     disabled={!selectedSheet.enabled}
                   >
-                    保存样式
+                    {t('style.saveStyle')}
                   </button>
                   {status && <div className="status-message">{status}</div>}
                 </div>
@@ -487,7 +537,6 @@ function App() {
             )}
           </div>
         ) : (
-          // 资源管理界面
           <div className="rules-container">
             <aside className="rules-sidebar">
               <button 
@@ -496,7 +545,7 @@ function App() {
                 className="create-button"
               >
                 <span className="icon">+</span>
-                新建规则
+                {t('rule.newRule')}
               </button>
               <div className="rule-list">
                 {rules.map(rule => {
@@ -525,7 +574,7 @@ function App() {
                             className="rule-title" 
                             title={rule.name}
                           >
-                            {rule.name || '未命名规则'}
+                            {rule.name || t('rule.unnamed')}
                           </span>
                           {rule.url && (
                             <span 
@@ -546,7 +595,7 @@ function App() {
                             saveRules(updatedRules);
                           }}
                           className="delete-button"
-                          title="删除"
+                          title={t('common.delete')}
                         >
                           ×
                         </button>
@@ -566,73 +615,73 @@ function App() {
                 )}
                 {selectedRule.id === 'vconsole' ? (
                   <div className="form-group">
-                    <p>这是一个内置规则，用于在网页中注入调试面板。启用此规则后，将在所有网页中显示调试面板。</p>
+                    <p>{t('rule.vConsoleDescription')}</p>
                   </div>
                 ) : (
                   <>
                     <div className="form-group">
-                      <label htmlFor="rule-url">URL 匹配模式（正则表达式）</label>
+                      <label htmlFor="rule-url">{t('rule.urlPattern')}</label>
                       <input
                         id="rule-url"
                         type="text"
                         value={selectedRule.url}
                         onChange={e => updateSelectedRule({ url: e.target.value })}
-                        placeholder="例如：.*\.js$"
+                        placeholder={t('rule.urlPatternPlaceholder')}
                       />
                     </div>
                     
                     <div className="form-group">
-                      <label htmlFor="rule-content-type">内容类型</label>
+                      <label htmlFor="rule-content-type">{t('rule.contentType')}</label>
                       <select
                         id="rule-content-type"
                         value={selectedRule.contentType}
                         onChange={e => updateSelectedRule({ contentType: e.target.value })}
                       >
-                        <option value="application/javascript">JavaScript</option>
-                        <option value="text/html">HTML</option>
-                        <option value="text/css">CSS</option>
-                        <option value="application/json">JSON</option>
-                        <option value="text/plain">Text</option>
-                        <option value="image/*">Image</option>
-                        <option value="application/xml">XML</option>
-                        <option value="application/x-www-form-urlencoded">Form Data</option>
-                        <option value="*/*">All Types</option>
+                        <option value="application/javascript">{t('contentTypes.javascript')}</option>
+                        <option value="text/html">{t('contentTypes.html')}</option>
+                        <option value="text/css">{t('contentTypes.css')}</option>
+                        <option value="application/json">{t('contentTypes.json')}</option>
+                        <option value="text/plain">{t('contentTypes.text')}</option>
+                        <option value="image/*">{t('contentTypes.image')}</option>
+                        <option value="application/xml">{t('contentTypes.xml')}</option>
+                        <option value="application/x-www-form-urlencoded">{t('contentTypes.formData')}</option>
+                        <option value="*/*">{t('contentTypes.all')}</option>
                       </select>
                     </div>
 
                     <div className="form-group">
-                      <label htmlFor="rule-type">规则类型</label>
+                      <label htmlFor="rule-type">{t('rule.ruleType')}</label>
                       <select
                         id="rule-type"
                         value={selectedRule.type}
                         onChange={e => updateSelectedRule({ type: e.target.value as ResourceRule['type'] })}
                       >
-                        <option value="block">阻止加载</option>
-                        <option value="modify">修改内容</option>
-                        <option value="inject">注入函数</option>
+                        <option value="block">{t('rule.blockResource')}</option>
+                        <option value="modify">{t('rule.modifyContent')}</option>
+                        <option value="inject">{t('rule.injectFunction')}</option>
                       </select>
                     </div>
 
                     {selectedRule.type === 'modify' && (
                       <div className="form-group">
                         <label htmlFor="rule-content">
-                          替换内容
-                          <span className="label-hint">（将匹配到的资源内容替换为以下内容）</span>
+                          {t('rule.replacementContent')}
+                          <span className="label-hint">{t('rule.replacementContentHint')}</span>
                         </label>
                         <div className="example-block">
-                          <p>示例：</p>
+                          <p>{t('rule.examples.title')}</p>
                           <ul>
-                            <li>替换JS：<code>console.log('已被修改');</code></li>
-                            <li>替换CSS：<code>{`body { background: #fff !important; }`}</code></li>
-                            <li>替换HTML：<code>&lt;div&gt;已被修改&lt;/div&gt;</code></li>
-                            <li>替换JSON：<code>{`{"message": "已被修改"}`}</code></li>
+                            <li>{t('rule.examples.replaceJS')}：<code>console.log('已被修改');</code></li>
+                            <li>{t('rule.examples.replaceCSS')}：<code>{`body { background: #fff !important; }`}</code></li>
+                            <li>{t('rule.examples.replaceHTML')}：<code>&lt;div&gt;已被修改&lt;/div&gt;</code></li>
+                            <li>{t('rule.examples.replaceJSON')}：<code>{`{"message": "已被修改"}`}</code></li>
                           </ul>
                         </div>
                         <textarea
                           id="rule-content"
                           value={selectedRule.content || ''}
                           onChange={e => updateSelectedRule({ content: e.target.value })}
-                          placeholder="输入要替换的内容"
+                          placeholder={t('rule.enterContent')}
                         />
                       </div>
                     )}
@@ -640,21 +689,21 @@ function App() {
                     {selectedRule.type === 'inject' && (
                       <div className="form-group">
                         <label htmlFor="rule-function">
-                          注入函数
-                          <span className="label-hint">（在页面上下文中执行的函数代码）</span>
+                          {t('rule.injectionFunction')}
+                          <span className="label-hint">{t('rule.injectionFunctionHint')}</span>
                         </label>
                         <div className="example-block">
-                          <p>示例：</p>
+                          <p>{t('rule.examples.title')}</p>
                           <ul>
                             <li>
-                              <p>修改页面元素：</p>
+                              <p>{t('rule.examples.modifyElements')}：</p>
                               <pre>{`function() {
   const elements = document.querySelectorAll('.ad-banner');
   elements.forEach(el => el.style.display = 'none');
 }`}</pre>
                             </li>
                             <li>
-                              <p>注入自定义脚本：</p>
+                              <p>{t('rule.examples.injectScript')}：</p>
                               <pre>{`function() {
   const script = document.createElement('script');
   script.textContent = 'console.log("注入的脚本已执行");';
@@ -662,7 +711,7 @@ function App() {
 }`}</pre>
                             </li>
                             <li>
-                              <p>监听页面事件：</p>
+                              <p>{t('rule.examples.listenEvents')}：</p>
                               <pre>{`function() {
   window.addEventListener('load', () => {
     console.log('页面加载完成');
@@ -675,7 +724,7 @@ function App() {
                           id="rule-function"
                           value={selectedRule.function || ''}
                           onChange={e => updateSelectedRule({ function: e.target.value })}
-                          placeholder="输入要注入的函数代码"
+                          placeholder={t('rule.enterFunction')}
                         />
                       </div>
                     )}
@@ -689,6 +738,4 @@ function App() {
     </div>
   );
 }
-
-export default App;
 

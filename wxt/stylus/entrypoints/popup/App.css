@@ -672,3 +672,50 @@ input:checked + .slider:before {
   line-height: 1.5;
   word-wrap: break-word;
 }
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+}
+
+.language-select {
+  background: #2d2d2d;
+  border: 1px solid #3c3c3c;
+  border-radius: 4px;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px 8px;
+  padding-right: 24px;
+  transition: all 0.2s;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 4px center;
+  background-size: 16px;
+}
+
+.language-select:hover {
+  background-color: #3c3c3c;
+  border-color: #4c4c4c;
+}
+
+.language-select:focus {
+  outline: none;
+  border-color: #0e639c;
+  box-shadow: 0 0 0 2px rgba(14, 99, 156, 0.25);
+}
+
+.language-select option {
+  background: #2d2d2d;
+  color: #ffffff;
+  padding: 8px;
+}
+
+/* 移除旧的语言切换按钮样式 */
+.language-toggle {
+  display: none;
+}
