@@ -22,9 +22,9 @@ export const translations: Translations = {
       function: '函数',
     },
     app: {
-      title: '资源管理器',
+      title: 'Stylus',
       styleManager: '样式管理',
-      resourceManager: '资源管理',
+      resourceManager: '函数管理',
       switchLanguage: '切换语言',
     },
     style: {
@@ -41,7 +41,7 @@ export const translations: Translations = {
       contentType: '内容类型',
       ruleType: '规则类型',
       blockResource: '阻止加载',
-      modifyContent: '修改内容',
+      modifyContent: '修改内��',
       injectFunction: '注入函数',
       replacementContent: '替换内容',
       replacementContentHint: '将匹配到的资源内容替换为以下内容',
@@ -59,7 +59,7 @@ export const translations: Translations = {
         injectScript: '注入自定义脚本',
         listenEvents: '监听页面事件',
       },
-      vConsoleDescription: '这是一个内置规则，用于在网���中注入调试面板。启用此规则后，将在所有网页中显示调试面板。',
+      vConsoleDescription: '这是一个内置规则，用于在网页中注入调试面板。启用此规则后，将在所有网页中显示调试面板。',
       unnamed: '未命名规则',
     },
     contentTypes: {
@@ -89,9 +89,9 @@ export const translations: Translations = {
       function: '函數',
     },
     app: {
-      title: '資源管理器',
+      title: 'Stylus',
       styleManager: '樣式管理',
-      resourceManager: '資源管理',
+      resourceManager: '函數管理',
       switchLanguage: '切換語言',
     },
     style: {
@@ -126,7 +126,7 @@ export const translations: Translations = {
         injectScript: '注入自訂指令碼',
         listenEvents: '監聽頁面事件',
       },
-      vConsoleDescription: '這是一個內建規則，��於在網頁中注入偵錯面板。啟用此規則後，將在所有網頁中顯示偵錯面板。',
+      vConsoleDescription: '這是一個內建規則，用於在網頁中注入偵錯面板。啟用此規則後，將在所有網頁中顯示偵錯面板。',
       unnamed: '未命名規則',
     },
     contentTypes: {
@@ -156,15 +156,15 @@ export const translations: Translations = {
       function: '関数',
     },
     app: {
-      title: 'リソースマネージャー',
+      title: 'Stylus',
       styleManager: 'スタイル管理',
-      resourceManager: 'リソース管理',
+      resourceManager: '関数管理',
       switchLanguage: '言語を切り替える',
     },
     style: {
       newStyleSheet: '新規スタイルシート',
       saveStyle: 'スタイルを保存',
-      styleSaved: 'スタイルが保存され適用されました',
+      styleSaved: 'スタイルが保存さ��適用されました',
       saveFailed: '保存に失敗しました',
       enterStyleName: 'スタイルシート名を入力',
     },
@@ -223,9 +223,9 @@ export const translations: Translations = {
       function: '함수',
     },
     app: {
-      title: '리소스 관리자',
+      title: 'Stylus',
       styleManager: '스타일 관리',
-      resourceManager: '리소스 관리',
+      resourceManager: '함수 관리',
       switchLanguage: '언어 전환',
     },
     style: {
@@ -290,9 +290,9 @@ export const translations: Translations = {
       function: 'Function',
     },
     app: {
-      title: 'Resource Manager',
+      title: 'Stylus',
       styleManager: 'Style Manager',
-      resourceManager: 'Resource Manager',
+      resourceManager: 'Function Manager',
       switchLanguage: 'Switch Language',
     },
     style: {
