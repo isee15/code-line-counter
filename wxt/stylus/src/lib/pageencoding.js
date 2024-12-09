@@ -166,7 +166,7 @@ export const PageEncoding = (() => {
         //}
         //reuse old rule ID to avoid adding duplicated rules for the same site
         const new_id = id_to_remove || allocateRuleId(oldRules);
-        await chrome.declarativeNetRequest.updateDynamicRules({
+        chrome.declarativeNetRequest.updateDynamicRules({
           removeRuleIds: id_to_remove ? [id_to_remove] : [],
           addRules: flg_add_rule
             ? [mv3.composeRule(new_id, url_pattern, new_code)]
