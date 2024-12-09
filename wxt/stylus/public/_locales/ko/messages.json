@@ -1,0 +1,59 @@
+{
+  "Use_page_default": {
+    "message": "페이지 기본값 사용"
+  },
+  "Unicode": {
+    "message": "유니코드"
+  },
+  "Arabic": {
+    "message": "아랍어"
+  },
+  "Baltic": {
+    "message": "발트어"
+  },
+  "Celtic": {
+    "message": "켈트어"
+  },
+  "Central_European": {
+    "message": "중앙유럽어"
+  },
+  "Chinese_Simplified": {
+    "message": "중국어 간체"
+  },
+  "Chinese_Traditional": {
+    "message": "중국어 번체"
+  },
+  "Cyrillic": {
+    "message": "키릴문자"
+  },
+  "Greek": {
+    "message": "그리스어"
+  },
+  "Hebrew": {
+    "message": "히브리어"
+  },
+  "Japanese": {
+    "message": "일본어"
+  },
+  "Korean": {
+    "message": "한국어"
+  },
+  "Nordic": {
+    "message": "북유럽어"
+  },
+  "South_European": {
+    "message": "남유럽어"
+  },
+  "Thai": {
+    "message": "태국어"
+  },
+  "Turkish": {
+    "message": "터키어"
+  },
+  "Vietnamese": {
+    "message": "베트남어"
+  },
+  "Western": {
+    "message": "서유럽어"
+  }
+} 

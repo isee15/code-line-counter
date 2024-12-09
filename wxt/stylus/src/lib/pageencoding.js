@@ -1,217 +1,289 @@
+import { TEXT_CODING_MAP } from "./charsets.js";
+import * as mv3 from "./mv3_util.js";
+
 export const PageEncoding = (() => {
-  // 某Tab的编码都暂存一下，这是prefix
-  const ENCODING_PREFIX = "FE_ENCODING_PREFIX_";
-  let listenerAddedFlag = false;
-  let contextMenuId = null;
+  // 初始化
+  const init = async () => {
+    function allocateRuleId(oldRules) {
+      function id_occupied(id) {
+        for (const rule of oldRules) {
+          if (rule.id === id) {
+            return true;
+          }
+        }
+        return false;
+      }
 
-  const resetEncoding = [["default", "默认/重置"]];
+      //for historical reason, oldRule IDs can be sparsely large, so we search empty slots instead of increment on old ID
+      for (let i = 1; i < 32768; i++) {
+        if (!id_occupied(i)) {
+          //console.log(`allocate new rule id = ${i}`)
+          return i;
+        }
+      }
 
-  // 系统支持的编码列表
-  const SystemCharsetList = [
-    ["UTF-8", "Unicode（UTF-8）"],
-    ["GBK", "简体中文（GBK）"],
-    ["GB3212", "简体中文（GB3212）"],
-    ["GB18030", "简体中文（GB18030）"],
-    ["Big5", "繁体中文（Big5）"],
-    ["UTF-16LE", "Unicode（UTF-16LE）"],
-    ["EUC-KR", "韩文（EUC-KR）"],
-    ["Shift_JIS", "日文（Shift_JIS）"],
-    ["EUC-JP", "日文（EUC-JP）"],
-    ["ISO-2022-JP", "日文（ISO-2022-JP）"],
-    ["Windows-874", "泰文（Windows-874）"],
-    ["Windows-1254", "土耳其文（Windows-1254）"],
-    ["ISO-8859-7", "希腊文（ISO-8859-7）"],
-    ["Windows-1253", "希腊文（Windows-1253）"],
-    ["Windows-1252", "西文（Windows-1252）"],
-    ["ISO-8859-15", "西文（ISO-8859-15）"],
-    ["Macintosh", "西文（Macintosh）"],
-    ["Windows-1258", "越南文（Windows-1258）"],
-    ["ISO-8859-2", "中欧文（ISO-8859-2）"],
-    ["Windows-1250", "中欧文（Windows-1250）"],
-  ];
+      return 1; //not likely to happen
+    }
 
-  // 菜单列表
-  let menuMap = {};
+    async function getLiveCodeMap() {
+      const live_map = { ...TEXT_CODING_MAP };
 
-  /**
-   * 创建右键菜单
-   */
-  const createMenu = () => {
-    console.log("createMenu");
-    contextMenuId = chrome.contextMenus.create({
-      title: "page-charset",
-      id: "page-charset",
-      contexts: ["all"],
-      documentUrlPatterns: ["http://*/*", "https://*/*", "file://*/*"],
-    });
+      const items = await chrome.storage.sync.get({
+        disabled_menu: "[]",
+        usr_menu: "[]",
+      });
 
-    chrome.contextMenus.create({
-      contexts: ["all"],
-      title: "检测当前网页字符集",
-      id: "page-charset-check",
-      parentId: contextMenuId,
-    });
+      const disabled_menu = JSON.parse(items.disabled_menu);
+      const usr_menu = JSON.parse(items.usr_menu);
 
-    chrome.contextMenus.create({
-      type: "separator",
-      id: "page-charset-separator",
-      parentId: contextMenuId,
-    });
+      for (const code of disabled_menu) {
+        delete live_map[code];
+      }
 
-    // 如果已经在设置页重新设置过字符集，这里则做一个覆盖，负责还原为默认
-    const encodingList = Array.from(SystemCharsetList);
+      //default menu may be overwritten by user menu if code is the same
+      for (const { lang, code } of usr_menu) {
+        live_map[code] = [lang, code, true]; //3rd item as flag of user defined
+      }
 
-    for (const item of resetEncoding.concat(encodingList)) {
-      menuMap[item[0].toUpperCase()] = chrome.contextMenus.create({
-        type: "radio",
-        contexts: ["all"],
-        id: `page-charset-${item[0]}`,
-        title:
-          item[0] === resetEncoding[0][0] ? resetEncoding[0][1] : `${item[1]}`,
-        checked: false,
-        parentId: contextMenuId,
+      return live_map;
+    }
+
+    //extract site url pattern from page url
+    //this pattern serves as url filter for dynamic rules
+    function extract_site_url_pattern(url) {
+      if (typeof url !== "string") {
+        return "Newtab";
+      }
+
+      const fragments = url.split("/").slice(0, 3);
+      return `${fragments.join("/")}/*`;
+    }
+
+    function injectTxt(txt) {
+      function _escapeHTML(html) {
+        return html
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      const url = location.href;
+      const is_html = !!url.match(/\.html?$/i);
+      const mime_marker = is_html ? "html" : "plain";
+
+      const doc_contents = is_html ? txt : `<pre>${_escapeHTML(txt)}</pre>`;
+
+      const newDoc = document.open(`text/${mime_marker}`, "replace");
+      newDoc.write(doc_contents);
+      newDoc.close();
+    }
+
+    // 检测页面编码
+    function detectCharset(tab) {
+      chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: () => {
+          // 获取 <meta charset> 或 <meta http-equiv="Content-Type">
+          const metaCharset = document.querySelector("meta[charset]");
+          const metaContentType = document.querySelector(
+            "meta[http-equiv='Content-Type']"
+          );
+          let charset = "unknown";
+
+          if (metaCharset) {
+            charset = metaCharset.getAttribute("charset");
+          } else if (metaContentType) {
+            const content = metaContentType.getAttribute("content");
+            const match = content.match(/charset=([^;]+)/i);
+            if (match) charset = match[1];
+          }
+
+          // 返回结果
+          charset = charset || "Default (likely UTF-8 or ISO-8859-1)";
+          alert(`Current page charset: ${charset}`);
+        },
       });
     }
-  };
 
-  /**
-   * 更新菜单的选中状态
-   * @param tabId
-   */
-  const updateMenu = (tabId) => {
-    // 选中它该选中的
-    const storageKey = ENCODING_PREFIX + tabId;
-    chrome.storage.local.get(storageKey, (result) => {
-      const encoding = result[storageKey] || "";
-      const menuId = menuMap[encoding.toUpperCase()];
+    //load local file with specified character set
+    async function loadLocalFile(url, new_code, tabId) {
+      //XMLHttpRequest() not allowed from file:// scheme
+      let response = null;
+      try {
+        response = await fetch(url);
+      } catch (e) {
+        chrome.tabs.create({ url: chrome.i18n.getMessage("msgPage") });
+        return;
+      }
 
-      for (const menu of Object.keys(menuMap)) {
-        chrome.contextMenus.update(menuMap[menu], {
-          checked: menuMap[menu] === menuId,
+      const buf = await response.arrayBuffer();
+
+      const decoder = new TextDecoder(new_code);
+      const txt = decoder.decode(buf);
+
+      chrome.scripting.executeScript({
+        target: { tabId: tabId },
+        func: injectTxt,
+        args: [txt],
+      });
+    }
+
+    // The onClicked callback function.
+    async function onClickHandler(info, tab) {
+      const new_code = info.menuItemId;
+      console.log(new_code);
+      if (new_code === "detect_encoding") {
+        // alert document.charset
+        detectCharset(tab);
+        return;
+      }
+
+      let flg_need_reload = false;
+      let flg_add_rule = true;
+
+      const url_pattern = extract_site_url_pattern(tab.url);
+
+      const oldRules = await chrome.declarativeNetRequest.getDynamicRules();
+
+      const id_to_remove = mv3.findRuleIdByUrl(oldRules, url_pattern);
+
+      if (new_code === "default") {
+        flg_need_reload = true;
+        flg_add_rule = false;
+      } else {
+        if (url_pattern === "file:///*") {
+          await loadLocalFile(tab.url, new_code, tab.id);
+        } else {
+          flg_need_reload = true;
+        }
+      }
+
+      if (flg_need_reload) {
+        //if (flg_add_rule && id_to_remove){
+        //    console.log(`reuse rule id = ${id_to_remove}`)
+        //}
+        //reuse old rule ID to avoid adding duplicated rules for the same site
+        const new_id = id_to_remove || allocateRuleId(oldRules);
+        await chrome.declarativeNetRequest.updateDynamicRules({
+          removeRuleIds: id_to_remove ? [id_to_remove] : [],
+          addRules: flg_add_rule
+            ? [mv3.composeRule(new_id, url_pattern, new_code)]
+            : [],
         });
+
+        chrome.tabs.update(tab.id, { url: tab.url });
       }
-    });
-  };
+    }
 
-  /**
-   * web请求截获，修改字符集
-   */
-  const addOnlineSiteEncodingListener = async (callback) => {
-    listenerAddedFlag = true;
+    chrome.contextMenus.onClicked.addListener(onClickHandler);
 
-    // 标签被关闭时的检测
-    chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
-      const storageKey = ENCODING_PREFIX + tabId;
-      chrome.storage.local.remove(storageKey);
-    });
-    
-    // 标签页有切换时
-    chrome.tabs.onActivated.addListener((activeInfo) => {
-      if (Object.keys(menuMap).length) {
-        updateMenu(activeInfo.tabId);
-      }
-    });
+    //update selected coding every time new page loaded
+    //this action may be expensive
+    chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+      if (changeInfo.status === "complete") {
+        //update context menu
+        const g_site2Code = await mv3.get_site2Code();
+        const url_pattern = extract_site_url_pattern(tab.url);
+        const my_code = g_site2Code[url_pattern] || "default";
 
-    // 监听页面加载完成事件
-    chrome.webNavigation.onCompleted.addListener(async (details) => {
-      // 只处理主框架
-      if (details.frameId !== 0) return;
+        const live_code_map = await getLiveCodeMap();
 
-      const storageKey = ENCODING_PREFIX + details.tabId;
-      const result = await chrome.storage.local.get(storageKey);
-      const charset = result[storageKey];
+        //update menu status
+        /*        
+        for (var menuId in live_code_map){
+            chrome.contextMenus.update(menuId, {
+                "checked"   :   false
+            })
+        }
+*/
 
-      if (charset) {
-        // 通过content script修改字符集
-        chrome.tabs.sendMessage(details.tabId, {
-          action: "switchCharset",
-          charset
-        });
-      }
-    });
-
-    // 当编码设置改变时
-    chrome.storage.onChanged.addListener(async (changes, areaName) => {
-      if (areaName === 'local') {
-        for (const [key, change] of Object.entries(changes)) {
-          if (key.startsWith(ENCODING_PREFIX)) {
-            const tabId = Number.parseInt(key.replace(ENCODING_PREFIX, ''), 10);
-            const charset = change.newValue;
-            
-            if (charset) {
-              // 通过content script修改字符集
-              chrome.tabs.sendMessage(tabId, {
-                action: "switchCharset",
-                charset
-              });
+        if (live_code_map[my_code]) {
+          chrome.contextMenus.update(
+            my_code,
+            {
+              checked: true,
+            },
+            () => {
+              const err = chrome.runtime.lastError;
+              if (
+                err &&
+                err.message.indexOf("Cannot find menu item with id") >= 0
+              ) {
+                //for some reason, menu may not be present
+                updateContextMenu().then(() => {
+                  chrome.contextMenus.update(my_code, {
+                    checked: true,
+                  });
+                });
+              }
             }
+          );
+        } else {
+          //console.warn(`${my_code} not found in menu`)
+          const oldRules = await chrome.declarativeNetRequest.getDynamicRules();
+          const ruleId = await mv3.findRuleIdByUrl(oldRules, url_pattern);
+          if (ruleId) {
+            //console.log(`remove code ${my_code} for site ${url_pattern}`)
+            await chrome.declarativeNetRequest.updateDynamicRules({
+              removeRuleIds: [ruleId],
+            });
           }
         }
       }
     });
 
-    callback?.();
-  };
+    async function updateContextMenu() {
+      const live_code_map = await getLiveCodeMap();
+      await chrome.contextMenus.removeAll();
 
-  // 添加菜单点击事件监听器
-  chrome.contextMenus.onClicked.addListener((info, tab) => {
-    if (info.menuItemId === "page-charset-check") {
-      chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        func: () => document.charset,
-      }).then((results) => {
-        const result = results[0].result;
-        chrome.tabs.sendMessage(tab.id, {
-          action: "showAlert",
-          message: `当前网页字符集是：${result}`
+      chrome.contextMenus.create({
+        title: "检测编码",
+        type: "normal",
+        contexts: ["page"],
+        id: "detect_encoding",
+      });
+
+      chrome.contextMenus.create({
+        type: "separator",
+        contexts: ["page"],
+        id: "separator",
+      });
+
+      for (let [code, [language, ui_code, is_custom]] of Object.entries(
+        live_code_map
+      )) {
+        if (!is_custom) {
+          language = chrome.i18n.getMessage(language);
+        }
+
+        let menu_title = language;
+
+        if (ui_code) {
+          menu_title += ` (${ui_code})`;
+        }
+
+        chrome.contextMenus.create({
+          title: menu_title,
+          type: "radio",
+          contexts: ["page"],
+          id: code,
         });
-      });
-    } else if (info.menuItemId.startsWith("page-charset-")) {
-      const charset = info.menuItemId.replace("page-charset-", "");
-      const item = resetEncoding.concat(SystemCharsetList).find(([code]) => code === charset);
-      
-      if (!info.wasChecked || charset === resetEncoding[0][0]) {
-        const storageKey = ENCODING_PREFIX + tab.id;
-        if (charset === resetEncoding[0][0]) {
-          chrome.storage.local.remove(storageKey);
-        } else {
-          chrome.storage.local.set({ [storageKey]: charset });
-        }
-        if (!listenerAddedFlag) {
-          addOnlineSiteEncodingListener(() => {
-            chrome.tabs.reload(tab.id, {
-              bypassCache: true,
-            });
-          });
-        } else {
-          chrome.tabs.reload(tab.id, {
-            bypassCache: true,
-          });
-        }
       }
-    }
-  });
 
-  chrome.runtime.onMessage.addListener((request, sender, callback) => {
-    // 如果发生了错误，就啥都别干了
-    if (chrome.runtime.lastError) {
-      console.log(chrome.runtime.lastError);
-      return true;
+      console.log("Context menu updated");
     }
 
-    if (request.type === "page-charset-update-menu") {
-      if (!contextMenuId) return;
-      chrome.contextMenus.removeAll(() => {
-        menuMap = {};
-        createMenu();
-      });
-    }
+    chrome.storage.onChanged.addListener((changes, namespace) => {
+      if (namespace === "sync") {
+        updateContextMenu().then(() => {});
+      }
+    });
 
-    callback?.();
-    return true;
-  });
-
-  return {
-    createMenu,
+    // Set up context menu at install time.
+    chrome.runtime.onInstalled.addListener(updateContextMenu);
   };
+
+  return { init };
 })();

@@ -33,7 +33,7 @@ export default defineBackground(() => {
 
   // 监听页面编码变化
   log("PageEncoding createMenu");
-  PageEncoding.createMenu();
+  PageEncoding.init();
 
   // 存储用户定义的规则
   let rules: ResourceRule[] = [];

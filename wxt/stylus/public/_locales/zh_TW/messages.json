@@ -1,0 +1,59 @@
+{
+  "Use_page_default": {
+    "message": "使用頁面預設編碼"
+  },
+  "Unicode": {
+    "message": "Unicode"
+  },
+  "Arabic": {
+    "message": "阿拉伯語"
+  },
+  "Baltic": {
+    "message": "波羅的語"
+  },
+  "Celtic": {
+    "message": "凱爾特語"
+  },
+  "Central_European": {
+    "message": "中歐語言"
+  },
+  "Chinese_Simplified": {
+    "message": "簡體中文"
+  },
+  "Chinese_Traditional": {
+    "message": "繁體中文"
+  },
+  "Cyrillic": {
+    "message": "西里爾語"
+  },
+  "Greek": {
+    "message": "希臘語"
+  },
+  "Hebrew": {
+    "message": "希伯來語"
+  },
+  "Japanese": {
+    "message": "日語"
+  },
+  "Korean": {
+    "message": "韓語"
+  },
+  "Nordic": {
+    "message": "北歐語"
+  },
+  "South_European": {
+    "message": "南歐語言"
+  },
+  "Thai": {
+    "message": "泰語"
+  },
+  "Turkish": {
+    "message": "土耳其語"
+  },
+  "Vietnamese": {
+    "message": "越南語"
+  },
+  "Western": {
+    "message": "西歐語言"
+  }
+} 

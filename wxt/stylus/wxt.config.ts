@@ -5,6 +5,7 @@ export default defineConfig({
   manifest: {
     name: "Stylus",
     description: "自定义网站CSS样式的浏览器扩展",
+    default_locale: "zh_CN",
     permissions: [
       "activeTab",
       "storage",

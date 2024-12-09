@@ -6,59 +6,6 @@ interface StyleSheet {
   url?: string;
 }
 
-function switchCharset(charset: string) {
-  console.log("切换字符集到:", charset);
-
-  // 防止重复切换
-  if (sessionStorage.getItem("charset-switched") === charset) {
-    console.log("字符集已经切换过，无需重复切换:", charset);
-    return;
-  }
-
-  const meta = document.querySelector(
-    'meta[charset], meta[http-equiv="Content-Type"]'
-  );
-
-  if (meta) {
-    if (
-      meta.hasAttribute("charset") &&
-      meta.getAttribute("charset") === charset
-    ) {
-      console.log("当前字符集已经是目标字符集:", charset);
-      return;
-    }
-
-    if (!meta.hasAttribute("charset")) {
-      const currentCharset = meta
-        ?.getAttribute("content")
-        ?.match(/charset=(.+)/i)?.[1];
-      if (currentCharset === charset) {
-        console.log("当前字符集已经是目标字符集:", charset);
-        return;
-      }
-    }
-  }
-
-  // 添加或修改 meta 标签
-  if (!meta) {
-    console.log("添加新的 meta charset 标签");
-    const newMeta = document.createElement("meta");
-    newMeta.setAttribute("charset", charset);
-    document.head.appendChild(newMeta);
-  } else {
-    console.log("更新 meta charset 属性");
-    if (meta.hasAttribute("charset")) {
-      meta.setAttribute("charset", charset);
-    } else {
-      meta.setAttribute("content", `text/html; charset=${charset}`);
-    }
-  }
-
-  // 保存状态并重新加载页面
-  sessionStorage.setItem("charset-switched", charset);
-  location.reload();
-}
-
 export default defineContentScript({
   matches: ["<all_urls>"],
   main() {
@@ -112,11 +59,5 @@ export default defineContentScript({
 
     // 初始应用样式
     applyStyles();
-
-    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-      if (request.action === "switchCharset") {
-        switchCharset(request.charset);
-      }
-    });
   },
 });

@@ -1,0 +1,59 @@
+{
+  "Use_page_default": {
+    "message": "Use page default"
+  },
+  "Unicode": {
+    "message": "Unicode"
+  },
+  "Arabic": {
+    "message": "Arabic"
+  },
+  "Baltic": {
+    "message": "Baltic"
+  },
+  "Celtic": {
+    "message": "Celtic"
+  },
+  "Central_European": {
+    "message": "Central European"
+  },
+  "Chinese_Simplified": {
+    "message": "Chinese Simplified"
+  },
+  "Chinese_Traditional": {
+    "message": "Chinese Traditional"
+  },
+  "Cyrillic": {
+    "message": "Cyrillic"
+  },
+  "Greek": {
+    "message": "Greek"
+  },
+  "Hebrew": {
+    "message": "Hebrew"
+  },
+  "Japanese": {
+    "message": "Japanese"
+  },
+  "Korean": {
+    "message": "Korean"
+  },
+  "Nordic": {
+    "message": "Nordic"
+  },
+  "South_European": {
+    "message": "South European"
+  },
+  "Thai": {
+    "message": "Thai"
+  },
+  "Turkish": {
+    "message": "Turkish"
+  },
+  "Vietnamese": {
+    "message": "Vietnamese"
+  },
+  "Western": {
+    "message": "Western"
+  }
+} 
