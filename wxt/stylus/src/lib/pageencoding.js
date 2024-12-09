@@ -190,15 +190,6 @@ export const PageEncoding = (() => {
 
         const live_code_map = await getLiveCodeMap();
 
-        //update menu status
-        /*        
-        for (var menuId in live_code_map){
-            chrome.contextMenus.update(menuId, {
-                "checked"   :   false
-            })
-        }
-*/
-
         if (live_code_map[my_code]) {
           chrome.contextMenus.update(
             my_code,
@@ -236,19 +227,28 @@ export const PageEncoding = (() => {
 
     async function updateContextMenu() {
       const live_code_map = await getLiveCodeMap();
-      await chrome.contextMenus.removeAll();
+      chrome.contextMenus.removeAll();
+
+      chrome.contextMenus.create({
+        title: chrome.i18n.getMessage("page_encoding"),
+        type: "normal",
+        contexts: ["page"],
+        id: "parent_menu",
+      });
 
       chrome.contextMenus.create({
         title: "检测编码",
         type: "normal",
         contexts: ["page"],
         id: "detect_encoding",
+        parentId: "parent_menu",
       });
 
       chrome.contextMenus.create({
         type: "separator",
         contexts: ["page"],
         id: "separator",
+        parentId: "parent_menu",
       });
 
       for (let [code, [language, ui_code, is_custom]] of Object.entries(
@@ -269,6 +269,7 @@ export const PageEncoding = (() => {
           type: "radio",
           contexts: ["page"],
           id: code,
+          parentId: "parent_menu",
         });
       }
 

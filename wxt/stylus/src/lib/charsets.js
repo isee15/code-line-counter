@@ -6,6 +6,10 @@ export const TEXT_CODING_MAP = {
   "utf-8": ["Unicode", "UTF-8"],
   "utf-16le": ["Unicode", "UTF-16LE"],
 
+  gbk: ["Chinese_Simplified", "GBK"],
+  gb18030: ["Chinese_Simplified", "GB18030"],
+  big5: ["Chinese_Traditional", "Big5"],
+
   "windows-1256": ["Arabic", "Windows-1256"],
   "iso-8859-6": ["Arabic", "ISO-8859-6"],
 
@@ -16,10 +20,6 @@ export const TEXT_CODING_MAP = {
   "iso-8859-14": ["Celtic", "ISO-8859-14"],
   "iso-8859-2": ["Central_European", "ISO-8859-2"],
   "windows-1250": ["Central_European", "windows-1250"],
-
-  gbk: ["Chinese_Simplified", "GBK"],
-  gb18030: ["Chinese_Simplified", "GB18030"],
-  big5: ["Chinese_Traditional", "Big5"],
 
   "iso-8859-5": ["Cyrillic", "ISO-8859-5"],
   "windows-1251": ["Cyrillic", "Windows-1251"],

@@ -1,4 +1,7 @@
 {
+  "page_encoding": {
+    "message": "ページエンコーディング"
+  },
   "Use_page_default": {
     "message": "ページのデフォルト設定を使用"
   },
