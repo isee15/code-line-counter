@@ -130,6 +130,46 @@ export const PageEncoding = (() => {
       });
     }
 
+    function copyToClipboard(tab) {
+      chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: () => {
+          // copy selection, 在一些禁止复制的情况下，需要使用这个方法
+          // 直接操作clipboard
+          // 获取当前选中内容
+          const selection = window.getSelection();
+
+          if (selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0); // 获取选中范围
+            const container = document.createElement("div"); // 创建一个临时容器
+
+            // 克隆选中内容并插入到临时容器
+            container.appendChild(range.cloneContents());
+
+            const plainText = selection.toString(); // 获取纯文本内容
+            const htmlContent = container.innerHTML; // 获取 HTML 内容
+
+            // 创建一个新的剪贴板事件
+            navigator.clipboard
+              .write([
+                new ClipboardItem({
+                  "text/plain": new Blob([plainText], { type: "text/plain" }),
+                  "text/html": new Blob([htmlContent], { type: "text/html" }),
+                }),
+              ])
+              .then(() => {
+                console.log("选中内容已复制到剪贴板！");
+              })
+              .catch((err) => {
+                console.error("复制到剪贴板失败：", err);
+              });
+          } else {
+            console.warn("没有选中任何内容！");
+          }
+        },
+      });
+    }
+
     // The onClicked callback function.
     async function onClickHandler(info, tab) {
       const new_code = info.menuItemId;
@@ -137,6 +177,10 @@ export const PageEncoding = (() => {
       if (new_code === "detect_encoding") {
         // alert document.charset
         detectCharset(tab);
+        return;
+      }
+      if (new_code === "copy") {
+        copyToClipboard(tab);
         return;
       }
 
@@ -228,6 +272,12 @@ export const PageEncoding = (() => {
     async function updateContextMenu() {
       const live_code_map = await getLiveCodeMap();
       chrome.contextMenus.removeAll();
+      chrome.contextMenus.create({
+        title: "复制",
+        type: "normal",
+        contexts: ["selection"],
+        id: "copy",
+      });
 
       chrome.contextMenus.create({
         title: chrome.i18n.getMessage("page_encoding"),

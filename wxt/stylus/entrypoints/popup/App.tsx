@@ -28,6 +28,14 @@ interface ResourceRule {
 
 const DEFAULT_TEMPLATES: StyleSheet[] = [
   {
+    id: 'force-select',
+    name: '允许选择复制',
+    css: `* {
+  user-select: unset !important;
+}`,
+    enabled: false
+  },
+  {
     id: 'dark-mode',
     name: '深色模式',
     css: `body {
