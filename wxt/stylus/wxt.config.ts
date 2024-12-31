@@ -4,7 +4,7 @@ export default defineConfig({
   extensionApi: "chrome",
   manifest: {
     name: "Stylus",
-    description: "CSS样式字体颜色自定义,护眼模式,高级选择复制,页面编码设置,js设置",
+    description: "__MSG_description__",
     default_locale: "zh_CN",
     permissions: [
       "activeTab",

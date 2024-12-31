@@ -1,4 +1,7 @@
 {
+  "description": {
+    "message": "CSS 스타일 글꼴 색상 사용자 정의, 눈 보호 모드, 고급 선택 복사, 페이지 인코딩 설정, JS 설정"
+  },
   "page_encoding": {
     "message": "페이지 인코딩"
   },

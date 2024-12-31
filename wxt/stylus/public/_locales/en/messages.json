@@ -1,4 +1,7 @@
 {
+  "description": {
+    "message": "Customize CSS styles, fonts and colors, eye protection mode, advanced selection copy, page encoding settings, JS settings"
+  },
   "page_encoding": {
     "message": "Page Encoding"
   },

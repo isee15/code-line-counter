@@ -1,4 +1,7 @@
 {
+  "description": {
+    "message": "CSS样式字体颜色自定义,护眼模式,高级选择复制,页面编码设置,js设置"
+  },
   "page_encoding": {
     "message": "页面编码"
   },
