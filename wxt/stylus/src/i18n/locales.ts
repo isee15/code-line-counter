@@ -41,7 +41,7 @@ export const translations: Translations = {
       contentType: '内容类型',
       ruleType: '规则类型',
       blockResource: '阻止加载',
-      modifyContent: '修改内��',
+      modifyContent: '修改内容',
       injectFunction: '注入函数',
       replacementContent: '替换内容',
       replacementContentHint: '将匹配到的资源内容替换为以下内容',
@@ -164,7 +164,7 @@ export const translations: Translations = {
     style: {
       newStyleSheet: '新規スタイルシート',
       saveStyle: 'スタイルを保存',
-      styleSaved: 'スタイルが保存さ��適用されました',
+      styleSaved: 'スタイルが保存され適用されました',
       saveFailed: '保存に失敗しました',
       enterStyleName: 'スタイルシート名を入力',
     },
