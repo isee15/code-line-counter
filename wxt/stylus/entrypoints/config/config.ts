@@ -54,7 +54,7 @@ export const DEFAULT_TEMPLATES: StyleSheet[] = [
     id: "reading-mode",
     name: "阅读模式",
     css: `body {
-    max-width: 800px !important;
+    max-width: 784px !important;
     margin: 0 auto !important;
     padding: 20px !important;
     font-size: 18px !important;
@@ -172,7 +172,7 @@ export const DEFAULT_RULES: ResourceRule[] = [
         const style = document.createElement('style');
         style.textContent = \`
           body {
-            max-width: 800px !important;
+            max-width: 784px !important;
             margin: 0 auto !important;
             padding: 20px !important;
             font-size: 18px !important;
