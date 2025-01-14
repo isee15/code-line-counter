@@ -73,6 +73,19 @@ export const translations: Translations = {
       formData: '表单数据',
       all: '所有类型',
     },
+    header: {
+      title: 'Header 管理',
+      request: '请求 Header',
+      response: '响应 Header',
+      newRule: '新建规则',
+      ruleName: '规则名称',
+      urlPattern: 'URL 匹配模式',
+      urlPatternPlaceholder: '例如: .*\\.example\\.com.*',
+      headers: 'Headers',
+      addHeader: '添加 Header',
+      headerName: 'Header 名称',
+      headerValue: 'Header 值',
+    }
   },
   'zh-TW': {
     common: {
@@ -140,6 +153,19 @@ export const translations: Translations = {
       formData: '表單資料',
       all: '所有類型',
     },
+    header: {
+      title: 'Header 管理',
+      request: '請求 Header',
+      response: '響應 Header',
+      newRule: '新建規則',
+      ruleName: '規則名稱',
+      urlPattern: 'URL 匹配模式',
+      urlPatternPlaceholder: '例如: .*\\.example\\.com.*',
+      headers: 'Headers',
+      addHeader: '新增 Header',
+      headerName: 'Header 名稱',
+      headerValue: 'Header 值',
+    }
   },
   'ja': {
     common: {
@@ -207,6 +233,19 @@ export const translations: Translations = {
       formData: 'フォームデータ',
       all: 'すべてのタイプ',
     },
+    header: {
+      title: 'Header 管理',
+      request: 'リクエスト Header',
+      response: 'レスポンス Header',
+      newRule: '新規ルール',
+      ruleName: 'ルール名',
+      urlPattern: 'URL パターン',
+      urlPatternPlaceholder: '例: .*\\.example\\.com.*',
+      headers: 'Headers',
+      addHeader: 'Header を追加',
+      headerName: 'Header 名',
+      headerValue: 'Header 値',
+    }
   },
   'ko': {
     common: {
@@ -274,6 +313,19 @@ export const translations: Translations = {
       formData: '폼 데이터',
       all: '모든 유형',
     },
+    header: {
+      title: 'Header 관리',
+      request: '요청 Header',
+      response: '응답 Header',
+      newRule: '새 규칙',
+      ruleName: '규칙 이름',
+      urlPattern: 'URL 패턴',
+      urlPatternPlaceholder: '예: .*\\.example\\.com.*',
+      headers: 'Headers',
+      addHeader: 'Header 추가',
+      headerName: 'Header 이름',
+      headerValue: 'Header 값',
+    }
   },
   'en-US': {
     common: {
@@ -341,6 +393,19 @@ export const translations: Translations = {
       formData: 'Form Data',
       all: 'All Types',
     },
+    header: {
+      title: 'Header Manager',
+      request: 'Request Headers',
+      response: 'Response Headers',
+      newRule: 'New Rule',
+      ruleName: 'Rule Name',
+      urlPattern: 'URL Pattern',
+      urlPatternPlaceholder: 'e.g., .*\\.example\\.com.*',
+      headers: 'Headers',
+      addHeader: 'Add Header',
+      headerName: 'Header Name',
+      headerValue: 'Header Value',
+    }
   },
 };
 

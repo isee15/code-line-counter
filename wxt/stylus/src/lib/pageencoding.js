@@ -1,5 +1,5 @@
 import { TEXT_CODING_MAP } from "./charsets.js";
-import * as mv3 from "./mv3_util.js";
+import * as mv3 from "./rule_util.js";
 
 export const PageEncoding = (() => {
   // 初始化

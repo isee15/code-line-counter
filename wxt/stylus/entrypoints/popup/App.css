@@ -719,3 +719,192 @@ input:checked + .slider:before {
 .language-toggle {
   display: none;
 }
+
+/* 添加 Header 配置相关的样式 */
+.header-type-selector {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.header-type-selector button {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #ccc;
+  background: #fff;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.header-type-selector button.active {
+  background: #1a73e8;
+  color: white;
+  border-color: #1a73e8;
+}
+
+.header-editor {
+  padding: 16px;
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.header-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-weight: 500;
+  color: #333;
+}
+
+.form-group input {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.headers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.header-item {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.header-item input {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.header-item button {
+  padding: 8px 12px;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.headers-list > button {
+  margin-top: 8px;
+  padding: 8px;
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* 通用容器样式 */
+.container {
+  width: 800px;
+  height: 600px;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.tabs button {
+  padding: 8px 16px;
+  border: none;
+  background: #f0f0f0;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.tabs button.active {
+  background: #1a73e8;
+  color: white;
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  gap: 16px;
+}
+
+.sidebar {
+  width: 250px;
+  background: #f8f9fa;
+  padding: 16px;
+  border-radius: 4px;
+}
+
+.editor {
+  flex: 1;
+  background: #f8f9fa;
+  padding: 16px;
+  border-radius: 4px;
+}
+
+.rule-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rule-item {
+  padding: 8px;
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid #ddd;
+}
+
+.rule-item.active {
+  border-color: #1a73e8;
+  background: #e8f0fe;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.add-button {
+  margin-top: 16px;
+  padding: 8px;
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  width: 100%;
+}
+
+.locale-toggle {
+  padding: 8px 16px;
+  background: #f0f0f0;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
