@@ -13,6 +13,7 @@ import {
 } from "../config/config";
 import type { StyleSheet, ResourceRule, HeaderRule } from "../config/config";
 import { applyHeaderRules, getLocaleDisplayText } from "../config/storage";
+import { File, Upload, Download } from 'lucide-react';
 
 export default function App() {
   const [styleSheets, setStyleSheets] = useState<StyleSheet[]>([]);
@@ -763,6 +764,48 @@ console.log('页面加载完成');
     );
   };
 
+  // 导出配置
+  const handleExportConfig = () => {
+    const config = {
+      styleSheets,
+      rules,
+      headerRules,
+    };
+    const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'stylus-config.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // 导入配置
+  const handleImportConfig = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const importedConfig = JSON.parse(e.target?.result as string);
+        setStyleSheets(importedConfig.styleSheets || []);
+        setRules(importedConfig.rules || []);
+        setHeaderRules(importedConfig.headerRules || []);
+        // 保存到 chrome.storage.local
+        chrome.storage.local.set({
+          'stylus-sheets': importedConfig.styleSheets || [],
+          'resource-rules': importedConfig.rules || [],
+          'header-rules': importedConfig.headerRules || [],
+        });
+        setStatus('配置已导入');
+      } catch (error) {
+        setStatus('导入失败：无效的配置文件');
+      }
+    };
+    reader.readAsText(file);
+  };
+
   return (
     <div className="app-container">
       <header className="app-header">
@@ -784,6 +827,21 @@ console.log('页面加载完成');
             <option value="ko">{getLocaleDisplayText("ko")}</option>
             <option value="en-US">{getLocaleDisplayText("en-US")}</option>
           </select>
+          <button onClick={handleExportConfig} className="export-button" type="button">
+            <Download size={16} />
+            {t("common.export")}
+          </button>
+          <label className="import-label">
+            <Upload size={16} />
+            {t("common.import")}
+            <input
+              type="file"
+              accept=".json"
+              onChange={handleImportConfig}
+              className="import-input"
+              aria-label="Import configuration"
+            />
+          </label>
         </div>
         <nav className="tab-nav">
           <button
@@ -792,17 +850,21 @@ console.log('页面加载完成');
             onClick={() => {
               setCurrentPanel("style");
             }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') setCurrentPanel("style");
+            }}
           >
             <span className="icon">🎨</span>
             {t("app.styleManager")}
           </button>
           <button
             type="button"
-            className={`tab-button ${
-              currentPanel === "resource" ? "active" : ""
-            }`}
+            className={`tab-button ${currentPanel === "resource" ? "active" : ""}`}
             onClick={() => {
               setCurrentPanel("resource");
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') setCurrentPanel("resource");
             }}
           >
             <span className="icon">⚙️</span>
@@ -810,11 +872,12 @@ console.log('页面加载完成');
           </button>
           <button
             type="button"
-            className={`tab-button ${
-              currentPanel === "header" ? "active" : ""
-            }`}
+            className={`tab-button ${currentPanel === "header" ? "active" : ""}`}
             onClick={() => {
               setCurrentPanel("header");
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') setCurrentPanel("header");
             }}
           >
             <span className="icon">📝</span>

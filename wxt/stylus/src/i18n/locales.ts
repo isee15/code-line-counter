@@ -20,6 +20,10 @@ export const translations: Translations = {
       content: '内容',
       description: '描述',
       function: '函数',
+      export: '导出',
+      import: '导入',
+      importSuccess: '配置已导入',
+      importFailure: '导入失败：无效的配置文件',
     },
     app: {
       title: 'Stylus',
@@ -85,7 +89,7 @@ export const translations: Translations = {
       addHeader: '添加 Header',
       headerName: 'Header 名称',
       headerValue: 'Header 值',
-    }
+    },
   },
   'zh-TW': {
     common: {
@@ -100,6 +104,10 @@ export const translations: Translations = {
       content: '內容',
       description: '描述',
       function: '函數',
+      export: '導出',
+      import: '導入',
+      importSuccess: '配置已導入',
+      importFailure: '導入失敗：無效的配置文件',
     },
     app: {
       title: 'Stylus',
@@ -165,7 +173,7 @@ export const translations: Translations = {
       addHeader: '新增 Header',
       headerName: 'Header 名稱',
       headerValue: 'Header 值',
-    }
+    },
   },
   'ja': {
     common: {
@@ -180,6 +188,10 @@ export const translations: Translations = {
       content: 'コンテンツ',
       description: '説明',
       function: '関数',
+      export: 'エクスポート',
+      import: 'インポート',
+      importSuccess: '設定がインポートされました',
+      importFailure: 'インポートに失敗しました：無効な設定ファイル',
     },
     app: {
       title: 'Stylus',
@@ -245,7 +257,7 @@ export const translations: Translations = {
       addHeader: 'Header を追加',
       headerName: 'Header 名',
       headerValue: 'Header 値',
-    }
+    },
   },
   'ko': {
     common: {
@@ -260,6 +272,10 @@ export const translations: Translations = {
       content: '내용',
       description: '설명',
       function: '함수',
+      export: '내보내기',
+      import: '가져오기',
+      importSuccess: '설정이 가져오기되었습니다',
+      importFailure: '가져오기에 실패했습니다: 유효하지 않은 설정 파일',
     },
     app: {
       title: 'Stylus',
@@ -277,7 +293,7 @@ export const translations: Translations = {
     rule: {
       newRule: '새 규칙',
       urlPattern: 'URL 패턴 (정규식)',
-      urlPatternPlaceholder: '예: .*\\.js$',
+      urlPatternPlaceholder: '예: .*\.js$',
       contentType: '콘텐츠 유형',
       ruleType: '규칙 유형',
       blockResource: '로딩 차단',
@@ -320,12 +336,12 @@ export const translations: Translations = {
       newRule: '새 규칙',
       ruleName: '규칙 이름',
       urlPattern: 'URL 패턴',
-      urlPatternPlaceholder: '예: .*\\.example\\.com.*',
+      urlPatternPlaceholder: '예: .*\.example\.com.*',
       headers: 'Headers',
       addHeader: 'Header 추가',
       headerName: 'Header 이름',
       headerValue: 'Header 값',
-    }
+    },
   },
   'en-US': {
     common: {
@@ -340,6 +356,10 @@ export const translations: Translations = {
       content: 'Content',
       description: 'Description',
       function: 'Function',
+      export: 'Export',
+      import: 'Import',
+      importSuccess: 'Configuration imported successfully',
+      importFailure: 'Import failed: Invalid configuration file',
     },
     app: {
       title: 'Stylus',
@@ -357,7 +377,7 @@ export const translations: Translations = {
     rule: {
       newRule: 'New Rule',
       urlPattern: 'URL Pattern (RegExp)',
-      urlPatternPlaceholder: 'e.g., .*\\.js$',
+      urlPatternPlaceholder: 'e.g., .*\.js$',
       contentType: 'Content Type',
       ruleType: 'Rule Type',
       blockResource: 'Block Loading',
@@ -400,12 +420,12 @@ export const translations: Translations = {
       newRule: 'New Rule',
       ruleName: 'Rule Name',
       urlPattern: 'URL Pattern',
-      urlPatternPlaceholder: 'e.g., .*\\.example\\.com.*',
+      urlPatternPlaceholder: 'e.g., .*\.example\.com.*',
       headers: 'Headers',
       addHeader: 'Add Header',
       headerName: 'Header Name',
       headerValue: 'Header Value',
-    }
+    },
   },
 };
 
