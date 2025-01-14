@@ -2,296 +2,29 @@ import { useState, useEffect } from "react";
 import "./App.css";
 import CodeMirror from "@uiw/react-codemirror";
 import { css } from "@codemirror/lang-css";
+import { javascript } from "@codemirror/lang-javascript";
 import { vscodeDark } from "@uiw/codemirror-theme-vscode";
 import { t, setLocale, getLocale, initLocale } from "../../src/i18n/locales";
 import type { LocaleKey } from "../../src/i18n/locales";
-
-interface StyleSheet {
-  id: string;
-  name: string;
-  css: string;
-  enabled: boolean;
-  url?: string;
-}
-
-interface ResourceRule {
-  id: string;
-  enabled: boolean;
-  url: string;
-  contentType: string;
-  type: "block" | "modify" | "inject";
-  content?: string;
-  function?: string;
-  name: string;
-  description?: string;
-}
-
-interface HeaderRule {
-  id: string;
-  enabled: boolean;
-  url: string;
-  type: "request" | "response";
-  headers: {
-    [key: string]: string;
-  };
-  name: string;
-}
-
-const DEFAULT_TEMPLATES: StyleSheet[] = [
-  {
-    id: "force-select",
-    name: "允许选择复制",
-    css: `* {
-  user-select: unset !important;
-}`,
-    enabled: false,
-  },
-  {
-    id: "dark-mode",
-    name: "深色模式",
-    css: `body {
-  background-color: #1a1a1a !important;
-  color: #ffffff !important;
-}
-a {
-  color: #66b3ff !important;
-}`,
-    enabled: false,
-  },
-  {
-    id: "reading-mode",
-    name: "阅读模式",
-    css: `body {
-  max-width: 800px !important;
-  margin: 0 auto !important;
-  padding: 20px !important;
-  font-size: 18px !important;
-  line-height: 1.6 !important;
-}`,
-    enabled: false,
-  },
-  {
-    id: "eye-protection",
-    name: "护眼模式",
-    css: `/* 设置背景为护眼色 */
-body {
-  background-color: #c7edcc !important;
-  color: #333333 !important;
-}
-
-/* 调整文本颜色和背景 */
-p, div, span, li, td, th, caption, label, input, textarea {
-  background-color: #c7edcc !important;
-  color: #333333 !important;
-}
-
-/* 调整链接颜色 */
-a {
-  color: #2b5329 !important;
-}
-
-/* 调整图片亮度 */
-img {
-  filter: brightness(0.95) !important;
-}
-
-/* 调整代码块背景 */
-pre, code {
-  background-color: #b8e6be !important;
-  color: #1a3318 !important;
-}
-
-/* 调整输入框背景 */
-input, textarea, select {
-  background-color: #d8f2dc !important;
-}`,
-    enabled: false,
-  },
-];
-
-const DEFAULT_RULES: ResourceRule[] = [
-  {
-    id: "vconsole",
-    enabled: false,
-    url: ".*",
-    contentType: "text/html",
-    type: "inject",
-    name: "vConsole调试面板",
-    description: "在网页中注入调试工具，用于移动端调试",
-  },
-  {
-    id: "block-analytics",
-    enabled: false,
-    url: ".*(google-analytics\\.com|googletagmanager\\.com|umeng\\.com|cnzz\\.com|baidu\\.com/hm\\.js).*",
-    contentType: "*/*",
-    type: "block",
-    name: "拦截数据统计",
-    description: "阻止常见的网站统计和分析脚本",
-  },
-  {
-    id: "block-ads",
-    enabled: false,
-    url: ".*(pagead2\\.googlesyndication\\.com|ads\\.google\\.com|adservice\\.google\\.com|doubleclick\\.net).*",
-    contentType: "*/*",
-    type: "block",
-    name: "拦截广告请求",
-    description: "阻止常见的广告加载请求",
-  },
-  {
-    id: "dark-mode",
-    enabled: false,
-    url: ".*",
-    contentType: "text/html",
-    type: "inject",
-    function: `function() {
-      document.documentElement.style.filter = 'invert(1) hue-rotate(180deg)';
-      document.querySelectorAll('img, video, canvas').forEach(el => {
-        el.style.filter = 'invert(1) hue-rotate(180deg)';
-      });
-    }`,
-    name: "全局深色模式",
-    description: "将所有网页转换为深色模式",
-  },
-  {
-    id: "block-social",
-    enabled: false,
-    url: ".*(facebook\\.com|twitter\\.com|linkedin\\.com|weibo\\.com)/.*\\.(js|html)",
-    contentType: "*/*",
-    type: "block",
-    name: "拦截社交组件",
-    description: "阻止社交媒体分享按钮和跟踪组件",
-  },
-  {
-    id: "block-video-ads",
-    enabled: false,
-    url: ".*(doubleclick\\.net|\\.googlevideo\\.com/videoplayback\\?.*ctier=L|.*\\.com\\.\\w+/videos/other/.*)",
-    contentType: "*/*",
-    type: "block",
-    name: "拦截视频广告",
-    description: "阻止视频网站的广告内容",
-  },
-  {
-    id: "reading-mode",
-    enabled: false,
-    url: ".*",
-    contentType: "text/html",
-    type: "inject",
-    function: `function() {
-      const style = document.createElement('style');
-      style.textContent = \`
-        body {
-          max-width: 800px !important;
-          margin: 0 auto !important;
-          padding: 20px !important;
-          font-size: 18px !important;
-          line-height: 1.6 !important;
-          background: #fff !important;
-          color: #333 !important;
-        }
-        img { max-width: 100% !important; height: auto !important; }
-      \`;
-      document.head.appendChild(style);
-    }`,
-    name: "阅读模式",
-    description: "优化页面布局，提供更好的阅读体验",
-  },
-  {
-    id: "block-cookie-notices",
-    enabled: false,
-    url: ".*(cookie-notice|cookie-consent|cookie-law|gdpr).*\\.(js|css)",
-    contentType: "*/*",
-    type: "block",
-    name: "拦截Cookie提示",
-    description: "阻止烦人的Cookie政策提示框",
-  },
-  {
-    id: "block-chat-widgets",
-    enabled: false,
-    url: ".*(intercom\\.com|drift\\.com|tawk\\.to|crisp\\.chat|livechat\\.).*",
-    contentType: "*/*",
-    type: "block",
-    name: "拦截聊天组件",
-    description: "阻止网页客服聊天窗口",
-  },
-  {
-    id: "anti-debugger",
-    enabled: false,
-    url: ".*",
-    contentType: "text/html",
-    type: "inject",
-    function: `function() {
-      const noop = () => {};
-      Object.defineProperty(window, 'debugger', { get: noop, set: noop });
-      setInterval(() => {
-        const before = Date.now();
-        debugger;
-        const after = Date.now();
-        if (after - before > 100) {
-          console.log('检测到调试器暂停，已阻止');
-        }
-      }, 500);
-    }`,
-    name: "反调试保护",
-    description: "阻止网页的反调试措施",
-  },
-];
-
-const DEFAULT_HEADER_RULES: HeaderRule[] = [
-  {
-    id: "cors-headers",
-    enabled: false,
-    url: ".*",
-    type: "response",
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-      "Access-Control-Allow-Headers": "*",
-    },
-    name: "CORS Headers",
-  },
-  {
-    id: "iframe-headers",
-    enabled: false,
-    url: ".*",
-    type: "response",
-    headers: {
-      "X-Frame-Options": "ALLOWALL",
-      "Content-Security-Policy": "frame-ancestors *",
-    },
-    name: "允许 Iframe 嵌入",
-  },
-  {
-    id: "mobile-user-agent",
-    enabled: false,
-    url: ".*",
-    type: "request",
-    headers: {
-      "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1"
-    },
-    name: "移动端 User-Agent",
-  },
-  {
-    id: "pc-user-agent",
-    enabled: false,
-    url: ".*",
-    type: "request",
-    headers: {
-      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-    },
-    name: "PC端 User-Agent",
-  }
-];
+import {
+  DEFAULT_TEMPLATES,
+  DEFAULT_RULES,
+  DEFAULT_HEADER_RULES,
+} from "../config/config";
+import type { StyleSheet, ResourceRule, HeaderRule } from "../config/config";
+import { applyHeaderRules, getLocaleDisplayText } from "../config/storage";
 
 export default function App() {
   const [styleSheets, setStyleSheets] = useState<StyleSheet[]>([]);
   const [selectedSheet, setSelectedSheet] = useState<StyleSheet | null>(null);
   const [status, setStatus] = useState("");
-  const [showRules, setShowRules] = useState(false);
   const [rules, setRules] = useState<ResourceRule[]>([]);
   const [selectedRule, setSelectedRule] = useState<ResourceRule | null>(null);
   const [locale, setCurrentLocale] = useState<LocaleKey>(getLocale());
-  const [showHeaderRules, setShowHeaderRules] = useState(false);
   const [headerRules, setHeaderRules] = useState<HeaderRule[]>([]);
+  const [currentPanel, setCurrentPanel] = useState<
+    "style" | "resource" | "header"
+  >("style");
   const [selectedHeaderRule, setSelectedHeaderRule] =
     useState<HeaderRule | null>(null);
   const [headerType, setHeaderType] = useState<"request" | "response">(
@@ -351,29 +84,6 @@ export default function App() {
       }
     });
   }, []);
-
-  // 切换语言
-  const toggleLocale = () => {
-    // 定义语言循环顺序
-    const localeOrder: LocaleKey[] = ["zh-CN", "zh-TW", "ja", "ko", "en-US"];
-    const currentIndex = localeOrder.indexOf(locale);
-    const nextIndex = (currentIndex + 1) % localeOrder.length;
-    const newLocale = localeOrder[nextIndex];
-    setLocale(newLocale);
-    setCurrentLocale(newLocale);
-  };
-
-  // 获取语言显示文本
-  const getLocaleDisplayText = (locale: LocaleKey): string => {
-    const localeTexts: Record<LocaleKey, string> = {
-      "zh-CN": "简体中文",
-      "zh-TW": "繁體中文",
-      ja: "日本語",
-      ko: "한국어",
-      "en-US": "English",
-    };
-    return localeTexts[locale];
-  };
 
   const handleSave = async () => {
     try {
@@ -502,62 +212,555 @@ export default function App() {
     applyHeaderRules(updatedRules);
   };
 
-  const applyHeaderRules = async (rules: HeaderRule[]) => {
-    const enabledRules = rules.filter(rule => rule.enabled);
-    
-    // 获取现有规则
-    const oldRules = await chrome.declarativeNetRequest.getDynamicRules();
-    const oldRuleIds = oldRules.map(rule => rule.id);
-    
-    // 移除旧的 header 规则
-    await chrome.declarativeNetRequest.updateDynamicRules({
-      removeRuleIds: oldRuleIds
-    });
+  const renderHeaderRules = () => {
+    return (
+      <div className="rules-container">
+        <aside className="rules-sidebar">
+          <div className="header-type-selector">
+            <button
+              className={headerType === "request" ? "active" : ""}
+              onClick={() => setHeaderType("request")}
+            >
+              {t("header.request")}
+            </button>
+            <button
+              className={headerType === "response" ? "active" : ""}
+              onClick={() => setHeaderType("response")}
+            >
+              {t("header.response")}
+            </button>
+          </div>
+          <div className="rule-list">
+            {headerRules
+              .filter((rule) => rule.type === headerType)
+              .map((rule) => (
+                <div
+                  key={rule.id}
+                  className={`rule-card ${
+                    selectedHeaderRule?.id === rule.id ? "selected" : ""
+                  }`}
+                  onClick={() => setSelectedHeaderRule(rule)}
+                >
+                  <div className="rule-card-header">
+                    <label className="toggle">
+                      <input
+                        type="checkbox"
+                        checked={rule.enabled}
+                        onChange={(e) => {
+                          const updatedRules = headerRules.map((r) =>
+                            r.id === rule.id
+                              ? { ...r, enabled: e.target.checked }
+                              : r
+                          );
+                          saveHeaderRules(updatedRules);
+                        }}
+                      />
+                      <span className="toggle-slider" />
+                    </label>
+                    <div className="rule-info">
+                      <span className="rule-title">{rule.name}</span>
+                      <span className="rule-url">{rule.url}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            <button
+              className="create-button"
+              onClick={() => {
+                const newRule: HeaderRule = {
+                  id: `header-${Date.now()}`,
+                  enabled: false,
+                  url: ".*",
+                  type: headerType,
+                  headers: {},
+                  name: t("header.newRule"),
+                };
+                setHeaderRules([...headerRules, newRule]);
+                setSelectedHeaderRule(newRule);
+              }}
+            >
+              <span className="icon">+</span>
+              {t("header.newRule")}
+            </button>
+          </div>
+        </aside>
 
-    // 添加新规则
-    const newRules = enabledRules.map((rule, index) => {
-      const requestHeaders = rule.type === 'request' 
-        ? Object.entries(rule.headers).map(([header, value]) => ({
-            header,
-            operation: 'set' as chrome.declarativeNetRequest.HeaderOperation,
-            value
-          }))
-        : undefined;
+        {selectedHeaderRule && (
+          <section className="editor-section">
+            <div className="form-group">
+              <label htmlFor="header-name">{t("header.ruleName")}</label>
+              <input
+                id="header-name"
+                type="text"
+                value={selectedHeaderRule.name}
+                onChange={(e) => {
+                  const updatedRule = {
+                    ...selectedHeaderRule,
+                    name: e.target.value,
+                  };
+                  setSelectedHeaderRule(updatedRule);
+                  const updatedRules = headerRules.map((r) =>
+                    r.id === updatedRule.id ? updatedRule : r
+                  );
+                  saveHeaderRules(updatedRules);
+                }}
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="header-url">{t("header.urlPattern")}</label>
+              <input
+                id="header-url"
+                type="text"
+                value={selectedHeaderRule.url}
+                onChange={(e) => {
+                  const updatedRule = {
+                    ...selectedHeaderRule,
+                    url: e.target.value,
+                  };
+                  setSelectedHeaderRule(updatedRule);
+                  const updatedRules = headerRules.map((r) =>
+                    r.id === updatedRule.id ? updatedRule : r
+                  );
+                  saveHeaderRules(updatedRules);
+                }}
+                placeholder={t("header.urlPatternPlaceholder")}
+              />
+            </div>
+            <div className="form-group">
+              <label>{t("header.headers")}</label>
+              <div className="headers-list">
+                {Object.entries(selectedHeaderRule.headers).map(
+                  ([key, value]) => (
+                    <div key={key} className="header-item">
+                      <input
+                        type="text"
+                        value={key}
+                        onChange={(e) => {
+                          const newHeaders = {
+                            ...selectedHeaderRule.headers,
+                          };
+                          delete newHeaders[key];
+                          newHeaders[e.target.value] = value;
+                          const updatedRule = {
+                            ...selectedHeaderRule,
+                            headers: newHeaders,
+                          };
+                          setSelectedHeaderRule(updatedRule);
+                          const updatedRules = headerRules.map((r) =>
+                            r.id === updatedRule.id ? updatedRule : r
+                          );
+                          saveHeaderRules(updatedRules);
+                        }}
+                        placeholder={t("header.headerName")}
+                      />
+                      <input
+                        type="text"
+                        value={value}
+                        onChange={(e) => {
+                          const updatedRule = {
+                            ...selectedHeaderRule,
+                            headers: {
+                              ...selectedHeaderRule.headers,
+                              [key]: e.target.value,
+                            },
+                          };
+                          setSelectedHeaderRule(updatedRule);
+                          const updatedRules = headerRules.map((r) =>
+                            r.id === updatedRule.id ? updatedRule : r
+                          );
+                          saveHeaderRules(updatedRules);
+                        }}
+                        placeholder={t("header.headerValue")}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newHeaders = {
+                            ...selectedHeaderRule.headers,
+                          };
+                          delete newHeaders[key];
+                          const updatedRule = {
+                            ...selectedHeaderRule,
+                            headers: newHeaders,
+                          };
+                          setSelectedHeaderRule(updatedRule);
+                          const updatedRules = headerRules.map((r) =>
+                            r.id === updatedRule.id ? updatedRule : r
+                          );
+                          saveHeaderRules(updatedRules);
+                        }}
+                        className="delete-button"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const updatedRule = {
+                      ...selectedHeaderRule,
+                      headers: {
+                        ...selectedHeaderRule.headers,
+                        "": "",
+                      },
+                    };
+                    setSelectedHeaderRule(updatedRule);
+                    const updatedRules = headerRules.map((r) =>
+                      r.id === updatedRule.id ? updatedRule : r
+                    );
+                    saveHeaderRules(updatedRules);
+                  }}
+                  className="create-button"
+                >
+                  <span className="icon">+</span>
+                  {t("header.addHeader")}
+                </button>
+              </div>
+            </div>
+          </section>
+        )}
+      </div>
+    );
+  };
 
-      const responseHeaders = rule.type === 'response'
-        ? Object.entries(rule.headers).map(([header, value]) => ({
-            header,
-            operation: 'set' as chrome.declarativeNetRequest.HeaderOperation,
-            value
-          }))
-        : undefined;
+  const renderStyleRules = () => {
+    return (
+      <div className="styles-panel">
+        <aside className="styles-sidebar">
+          <button
+            type="button"
+            onClick={handleAddNew}
+            className="create-button"
+          >
+            <span className="icon">+</span>
+            {t("style.newStyleSheet")}
+          </button>
 
-      return {
-        id: index + 1000,
-        priority: 1,
-        action: {
-          type: 'modifyHeaders' as chrome.declarativeNetRequest.RuleActionType,
-          ...(requestHeaders && requestHeaders.length > 0 ? { requestHeaders } : {}),
-          ...(responseHeaders && responseHeaders.length > 0 ? { responseHeaders } : {})
-        },
-        condition: {
-          urlFilter: rule.url,
-          resourceTypes: ['main_frame', 'sub_frame', 'script', 'xmlhttprequest', 'other'] as chrome.declarativeNetRequest.ResourceType[]
-        }
-      };
-    }).filter(rule => {
-      const reqHeaders = rule.action.requestHeaders;
-      const resHeaders = rule.action.responseHeaders;
-      return (reqHeaders && reqHeaders.length > 0) || (resHeaders && resHeaders.length > 0);
-    });
+          <div className="style-list">
+            {styleSheets.map((sheet) => (
+              <div
+                key={sheet.id}
+                className={`style-card ${
+                  selectedSheet?.id === sheet.id ? "selected" : ""
+                }`}
+                onClick={() => handleSheetSelect(sheet)}
+              >
+                <div className="style-card-header">
+                  <label className="toggle">
+                    <input
+                      type="checkbox"
+                      checked={sheet.enabled}
+                      onChange={() => handleToggleSheet(sheet.id)}
+                    />
+                    <span className="toggle-slider" />
+                  </label>
+                  <span className="style-name">{sheet.name}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(sheet.id);
+                  }}
+                  className="delete-button"
+                  title={t("common.delete")}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+        </aside>
 
-    if (newRules.length > 0) {
-      await chrome.declarativeNetRequest.updateDynamicRules({
-        addRules: newRules
-      });
-    }
-    
-    console.log('update header rules:', await chrome.declarativeNetRequest.getDynamicRules());
+        {selectedSheet && (
+          <section className="editor-container">
+            <div className="editor-header">
+              <input
+                type="text"
+                value={selectedSheet.name}
+                onChange={(e) =>
+                  setSelectedSheet({
+                    ...selectedSheet,
+                    name: e.target.value,
+                  })
+                }
+                className="sheet-name-input"
+                placeholder={t("style.enterStyleName")}
+              />
+            </div>
+
+            <div className="editor-wrapper">
+              <CodeMirror
+                value={selectedSheet.css}
+                height="100%"
+                theme={vscodeDark}
+                extensions={[css()]}
+                onChange={(value: string) =>
+                  setSelectedSheet({
+                    ...selectedSheet,
+                    css: value,
+                  })
+                }
+              />
+            </div>
+
+            <div className="editor-footer">
+              <button
+                type="button"
+                onClick={handleSave}
+                className={`save-button ${
+                  !selectedSheet.enabled ? "disabled" : ""
+                }`}
+                disabled={!selectedSheet.enabled}
+              >
+                {t("style.saveStyle")}
+              </button>
+              {status && <div className="status-message">{status}</div>}
+            </div>
+          </section>
+        )}
+      </div>
+    );
+  };
+
+  const renderResourceRules = () => {
+    return (
+      <div className="rules-container">
+        <aside className="rules-sidebar">
+          <button
+            type="button"
+            onClick={handleAddRule}
+            className="create-button"
+          >
+            <span className="icon">+</span>
+            {t("rule.newRule")}
+          </button>
+          <div className="rule-list">
+            {rules.map((rule) => {
+              const isBuiltin = DEFAULT_RULES.find((r) => r.id === rule.id);
+              return (
+                <div
+                  key={rule.id}
+                  className={`rule-card ${
+                    selectedRule?.id === rule.id ? "selected" : ""
+                  }`}
+                  onClick={() => handleRuleSelect(rule)}
+                  data-builtin={isBuiltin ? "true" : "false"}
+                >
+                  <div className="rule-card-header">
+                    <label className="toggle">
+                      <input
+                        type="checkbox"
+                        checked={rule.enabled}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          toggleRule(rule.id);
+                        }}
+                      />
+                      <span className="toggle-slider" />
+                    </label>
+                    <div className="rule-info">
+                      <span className="rule-title" title={rule.name}>
+                        {rule.name || t("rule.unnamed")}
+                      </span>
+                      {rule.url && (
+                        <span className="rule-url" title={rule.url}>
+                          {rule.url}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  {!isBuiltin && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const updatedRules = rules.filter(
+                          (r) => r.id !== rule.id
+                        );
+                        saveRules(updatedRules);
+                      }}
+                      className="delete-button"
+                      title={t("common.delete")}
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </aside>
+
+        {selectedRule && (
+          <section className="editor-section">
+            {selectedRule.description && (
+              <div className="rule-description">
+                <p>{selectedRule.description}</p>
+              </div>
+            )}
+            {selectedRule.id === "vconsole" ? (
+              <div className="form-group">
+                <p>{t("rule.vConsoleDescription")}</p>
+              </div>
+            ) : (
+              <>
+                <div className="form-group">
+                  <label htmlFor="rule-url">{t("rule.urlPattern")}</label>
+                  <input
+                    id="rule-url"
+                    type="text"
+                    value={selectedRule.url}
+                    onChange={(e) =>
+                      updateSelectedRule({ url: e.target.value })
+                    }
+                    placeholder={t("rule.urlPatternPlaceholder")}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="rule-content-type">
+                    {t("rule.contentType")}
+                  </label>
+                  <select
+                    id="rule-content-type"
+                    value={selectedRule.contentType}
+                    onChange={(e) =>
+                      updateSelectedRule({ contentType: e.target.value })
+                    }
+                  >
+                    <option value="application/javascript">
+                      {t("contentTypes.javascript")}
+                    </option>
+                    <option value="text/html">{t("contentTypes.html")}</option>
+                    <option value="text/css">{t("contentTypes.css")}</option>
+                    <option value="application/json">
+                      {t("contentTypes.json")}
+                    </option>
+                    <option value="text/plain">{t("contentTypes.text")}</option>
+                    <option value="image/*">{t("contentTypes.image")}</option>
+                    <option value="application/xml">
+                      {t("contentTypes.xml")}
+                    </option>
+                    <option value="application/x-www-form-urlencoded">
+                      {t("contentTypes.formData")}
+                    </option>
+                    <option value="*/*">{t("contentTypes.all")}</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="rule-type">{t("rule.ruleType")}</label>
+                  <select
+                    id="rule-type"
+                    value={selectedRule.type}
+                    onChange={(e) =>
+                      updateSelectedRule({
+                        type: e.target.value as ResourceRule["type"],
+                      })
+                    }
+                  >
+                    <option value="block">{t("rule.blockResource")}</option>
+                    <option value="modify">{t("rule.modifyContent")}</option>
+                    <option value="inject">{t("rule.injectFunction")}</option>
+                  </select>
+                </div>
+
+                {selectedRule.type === "modify" && (
+                  <div className="form-group">
+                    <label htmlFor="rule-content">
+                      {t("rule.replacementContent")}
+                      <span className="label-hint">
+                        {t("rule.replacementContentHint")}
+                      </span>
+                    </label>
+                    <div className="example-block">
+                      <p>{t("rule.examples.title")}</p>
+                      <ul>
+                        <li>
+                          {t("rule.examples.replaceJS")}：
+                          <code>console.log('已被修改');</code>
+                        </li>
+                        <li>
+                          {t("rule.examples.replaceCSS")}：
+                          <code>{`body { background: #fff !important; }`}</code>
+                        </li>
+                        <li>
+                          {t("rule.examples.replaceHTML")}：
+                          <code>&lt;div&gt;已被修改&lt;/div&gt;</code>
+                        </li>
+                        <li>
+                          {t("rule.examples.replaceJSON")}：
+                          <code>{`{"message": "已被修改"}`}</code>
+                        </li>
+                      </ul>
+                    </div>
+                    <textarea
+                      id="rule-content"
+                      value={selectedRule.content || ""}
+                      onChange={(e) =>
+                        updateSelectedRule({ content: e.target.value })
+                      }
+                      placeholder={t("rule.enterContent")}
+                    />
+                  </div>
+                )}
+
+                {selectedRule.type === "inject" && (
+                  <div className="form-group">
+                    <label htmlFor="rule-function">
+                      {t("rule.injectionFunction")}
+                      <span className="label-hint">
+                        {t("rule.injectionFunctionHint")}
+                      </span>
+                    </label>
+                    <div className="example-block">
+                      <p>{t("rule.examples.title")}</p>
+                      <ul>
+                        <li>
+                          <p>{t("rule.examples.modifyElements")}：</p>
+                          <pre>{`function() {
+const elements = document.querySelectorAll('.ad-banner');
+elements.forEach(el => el.style.display = 'none');
+}`}</pre>
+                        </li>
+                        <li>
+                          <p>{t("rule.examples.injectScript")}：</p>
+                          <pre>{`function() {
+const script = document.createElement('script');
+script.textContent = 'console.log("注入的脚本已执行");';
+document.head.appendChild(script);
+}`}</pre>
+                        </li>
+                        <li>
+                          <p>{t("rule.examples.listenEvents")}：</p>
+                          <pre>{`function() {
+window.addEventListener('load', () => {
+console.log('页面加载完成');
+});
+}`}</pre>
+                        </li>
+                      </ul>
+                    </div>
+                    <CodeMirror
+                      value={selectedRule.function || ""}
+                      height="100%"
+                      theme={vscodeDark}
+                      extensions={[javascript()]}
+                      onChange={(value: string) =>
+                        updateSelectedRule({ function: value })
+                      }
+                    />
+                  </div>
+                )}
+              </>
+            )}
+          </section>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -585,12 +788,9 @@ export default function App() {
         <nav className="tab-nav">
           <button
             type="button"
-            className={`tab-button ${
-              !showRules && !showHeaderRules ? "active" : ""
-            }`}
+            className={`tab-button ${currentPanel === "style" ? "active" : ""}`}
             onClick={() => {
-              setShowRules(false);
-              setShowHeaderRules(false);
+              setCurrentPanel("style");
             }}
           >
             <span className="icon">🎨</span>
@@ -598,10 +798,11 @@ export default function App() {
           </button>
           <button
             type="button"
-            className={`tab-button ${showRules ? "active" : ""}`}
+            className={`tab-button ${
+              currentPanel === "resource" ? "active" : ""
+            }`}
             onClick={() => {
-              setShowRules(true);
-              setShowHeaderRules(false);
+              setCurrentPanel("resource");
             }}
           >
             <span className="icon">⚙️</span>
@@ -609,10 +810,11 @@ export default function App() {
           </button>
           <button
             type="button"
-            className={`tab-button ${showHeaderRules ? "active" : ""}`}
+            className={`tab-button ${
+              currentPanel === "header" ? "active" : ""
+            }`}
             onClick={() => {
-              setShowRules(false);
-              setShowHeaderRules(true);
+              setCurrentPanel("header");
             }}
           >
             <span className="icon">📝</span>
@@ -622,561 +824,11 @@ export default function App() {
       </header>
 
       <main className="app-content">
-        {!showRules && !showHeaderRules && (
-          <div className="styles-panel">
-            <aside className="styles-sidebar">
-              <button
-                type="button"
-                onClick={handleAddNew}
-                className="create-button"
-              >
-                <span className="icon">+</span>
-                {t("style.newStyleSheet")}
-              </button>
+        {currentPanel === "style" && renderStyleRules()}
 
-              <div className="style-list">
-                {styleSheets.map((sheet) => (
-                  <div
-                    key={sheet.id}
-                    className={`style-card ${
-                      selectedSheet?.id === sheet.id ? "selected" : ""
-                    }`}
-                    onClick={() => handleSheetSelect(sheet)}
-                  >
-                    <div className="style-card-header">
-                      <label className="toggle">
-                        <input
-                          type="checkbox"
-                          checked={sheet.enabled}
-                          onChange={() => handleToggleSheet(sheet.id)}
-                        />
-                        <span className="toggle-slider" />
-                      </label>
-                      <span className="style-name">{sheet.name}</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(sheet.id);
-                      }}
-                      className="delete-button"
-                      title={t("common.delete")}
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </aside>
+        {currentPanel === "resource" && renderResourceRules()}
 
-            {selectedSheet && (
-              <section className="editor-container">
-                <div className="editor-header">
-                  <input
-                    type="text"
-                    value={selectedSheet.name}
-                    onChange={(e) =>
-                      setSelectedSheet({
-                        ...selectedSheet,
-                        name: e.target.value,
-                      })
-                    }
-                    className="sheet-name-input"
-                    placeholder={t("style.enterStyleName")}
-                  />
-                </div>
-
-                <div className="editor-wrapper">
-                  <CodeMirror
-                    value={selectedSheet.css}
-                    height="100%"
-                    theme={vscodeDark}
-                    extensions={[css()]}
-                    onChange={(value: string) =>
-                      setSelectedSheet({
-                        ...selectedSheet,
-                        css: value,
-                      })
-                    }
-                  />
-                </div>
-
-                <div className="editor-footer">
-                  <button
-                    type="button"
-                    onClick={handleSave}
-                    className={`save-button ${
-                      !selectedSheet.enabled ? "disabled" : ""
-                    }`}
-                    disabled={!selectedSheet.enabled}
-                  >
-                    {t("style.saveStyle")}
-                  </button>
-                  {status && <div className="status-message">{status}</div>}
-                </div>
-              </section>
-            )}
-          </div>
-        )}
-
-        {showRules && (
-          <div className="rules-container">
-            <aside className="rules-sidebar">
-              <button
-                type="button"
-                onClick={handleAddRule}
-                className="create-button"
-              >
-                <span className="icon">+</span>
-                {t("rule.newRule")}
-              </button>
-              <div className="rule-list">
-                {rules.map((rule) => {
-                  const isBuiltin = DEFAULT_RULES.find((r) => r.id === rule.id);
-                  return (
-                    <div
-                      key={rule.id}
-                      className={`rule-card ${
-                        selectedRule?.id === rule.id ? "selected" : ""
-                      }`}
-                      onClick={() => handleRuleSelect(rule)}
-                      data-builtin={isBuiltin ? "true" : "false"}
-                    >
-                      <div className="rule-card-header">
-                        <label className="toggle">
-                          <input
-                            type="checkbox"
-                            checked={rule.enabled}
-                            onChange={(e) => {
-                              e.stopPropagation();
-                              toggleRule(rule.id);
-                            }}
-                          />
-                          <span className="toggle-slider" />
-                        </label>
-                        <div className="rule-info">
-                          <span className="rule-title" title={rule.name}>
-                            {rule.name || t("rule.unnamed")}
-                          </span>
-                          {rule.url && (
-                            <span className="rule-url" title={rule.url}>
-                              {rule.url}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      {!isBuiltin && (
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const updatedRules = rules.filter(
-                              (r) => r.id !== rule.id
-                            );
-                            saveRules(updatedRules);
-                          }}
-                          className="delete-button"
-                          title={t("common.delete")}
-                        >
-                          ×
-                        </button>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </aside>
-
-            {selectedRule && (
-              <section className="editor-section">
-                {selectedRule.description && (
-                  <div className="rule-description">
-                    <p>{selectedRule.description}</p>
-                  </div>
-                )}
-                {selectedRule.id === "vconsole" ? (
-                  <div className="form-group">
-                    <p>{t("rule.vConsoleDescription")}</p>
-                  </div>
-                ) : (
-                  <>
-                    <div className="form-group">
-                      <label htmlFor="rule-url">{t("rule.urlPattern")}</label>
-                      <input
-                        id="rule-url"
-                        type="text"
-                        value={selectedRule.url}
-                        onChange={(e) =>
-                          updateSelectedRule({ url: e.target.value })
-                        }
-                        placeholder={t("rule.urlPatternPlaceholder")}
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label htmlFor="rule-content-type">
-                        {t("rule.contentType")}
-                      </label>
-                      <select
-                        id="rule-content-type"
-                        value={selectedRule.contentType}
-                        onChange={(e) =>
-                          updateSelectedRule({ contentType: e.target.value })
-                        }
-                      >
-                        <option value="application/javascript">
-                          {t("contentTypes.javascript")}
-                        </option>
-                        <option value="text/html">
-                          {t("contentTypes.html")}
-                        </option>
-                        <option value="text/css">
-                          {t("contentTypes.css")}
-                        </option>
-                        <option value="application/json">
-                          {t("contentTypes.json")}
-                        </option>
-                        <option value="text/plain">
-                          {t("contentTypes.text")}
-                        </option>
-                        <option value="image/*">
-                          {t("contentTypes.image")}
-                        </option>
-                        <option value="application/xml">
-                          {t("contentTypes.xml")}
-                        </option>
-                        <option value="application/x-www-form-urlencoded">
-                          {t("contentTypes.formData")}
-                        </option>
-                        <option value="*/*">{t("contentTypes.all")}</option>
-                      </select>
-                    </div>
-
-                    <div className="form-group">
-                      <label htmlFor="rule-type">{t("rule.ruleType")}</label>
-                      <select
-                        id="rule-type"
-                        value={selectedRule.type}
-                        onChange={(e) =>
-                          updateSelectedRule({
-                            type: e.target.value as ResourceRule["type"],
-                          })
-                        }
-                      >
-                        <option value="block">{t("rule.blockResource")}</option>
-                        <option value="modify">
-                          {t("rule.modifyContent")}
-                        </option>
-                        <option value="inject">
-                          {t("rule.injectFunction")}
-                        </option>
-                      </select>
-                    </div>
-
-                    {selectedRule.type === "modify" && (
-                      <div className="form-group">
-                        <label htmlFor="rule-content">
-                          {t("rule.replacementContent")}
-                          <span className="label-hint">
-                            {t("rule.replacementContentHint")}
-                          </span>
-                        </label>
-                        <div className="example-block">
-                          <p>{t("rule.examples.title")}</p>
-                          <ul>
-                            <li>
-                              {t("rule.examples.replaceJS")}：
-                              <code>console.log('已被修改');</code>
-                            </li>
-                            <li>
-                              {t("rule.examples.replaceCSS")}：
-                              <code>{`body { background: #fff !important; }`}</code>
-                            </li>
-                            <li>
-                              {t("rule.examples.replaceHTML")}：
-                              <code>&lt;div&gt;已被修改&lt;/div&gt;</code>
-                            </li>
-                            <li>
-                              {t("rule.examples.replaceJSON")}：
-                              <code>{`{"message": "已被修改"}`}</code>
-                            </li>
-                          </ul>
-                        </div>
-                        <textarea
-                          id="rule-content"
-                          value={selectedRule.content || ""}
-                          onChange={(e) =>
-                            updateSelectedRule({ content: e.target.value })
-                          }
-                          placeholder={t("rule.enterContent")}
-                        />
-                      </div>
-                    )}
-
-                    {selectedRule.type === "inject" && (
-                      <div className="form-group">
-                        <label htmlFor="rule-function">
-                          {t("rule.injectionFunction")}
-                          <span className="label-hint">
-                            {t("rule.injectionFunctionHint")}
-                          </span>
-                        </label>
-                        <div className="example-block">
-                          <p>{t("rule.examples.title")}</p>
-                          <ul>
-                            <li>
-                              <p>{t("rule.examples.modifyElements")}：</p>
-                              <pre>{`function() {
-  const elements = document.querySelectorAll('.ad-banner');
-  elements.forEach(el => el.style.display = 'none');
-}`}</pre>
-                            </li>
-                            <li>
-                              <p>{t("rule.examples.injectScript")}：</p>
-                              <pre>{`function() {
-  const script = document.createElement('script');
-  script.textContent = 'console.log("注入的脚本已执行");';
-  document.head.appendChild(script);
-}`}</pre>
-                            </li>
-                            <li>
-                              <p>{t("rule.examples.listenEvents")}：</p>
-                              <pre>{`function() {
-  window.addEventListener('load', () => {
-    console.log('页面加载完成');
-  });
-}`}</pre>
-                            </li>
-                          </ul>
-                        </div>
-                        <textarea
-                          id="rule-function"
-                          value={selectedRule.function || ""}
-                          onChange={(e) =>
-                            updateSelectedRule({ function: e.target.value })
-                          }
-                          placeholder={t("rule.enterFunction")}
-                        />
-                      </div>
-                    )}
-                  </>
-                )}
-              </section>
-            )}
-          </div>
-        )}
-
-        {showHeaderRules && (
-          <div className="rules-container">
-            <aside className="rules-sidebar">
-              <div className="header-type-selector">
-                <button
-                  className={headerType === "request" ? "active" : ""}
-                  onClick={() => setHeaderType("request")}
-                >
-                  {t("header.request")}
-                </button>
-                <button
-                  className={headerType === "response" ? "active" : ""}
-                  onClick={() => setHeaderType("response")}
-                >
-                  {t("header.response")}
-                </button>
-              </div>
-              <div className="rule-list">
-                {headerRules
-                  .filter((rule) => rule.type === headerType)
-                  .map((rule) => (
-                    <div
-                      key={rule.id}
-                      className={`rule-card ${
-                        selectedHeaderRule?.id === rule.id ? "selected" : ""
-                      }`}
-                      onClick={() => setSelectedHeaderRule(rule)}
-                    >
-                      <div className="rule-card-header">
-                        <label className="toggle">
-                          <input
-                            type="checkbox"
-                            checked={rule.enabled}
-                            onChange={(e) => {
-                              const updatedRules = headerRules.map((r) =>
-                                r.id === rule.id
-                                  ? { ...r, enabled: e.target.checked }
-                                  : r
-                              );
-                              saveHeaderRules(updatedRules);
-                            }}
-                          />
-                          <span className="toggle-slider" />
-                        </label>
-                        <div className="rule-info">
-                          <span className="rule-title">{rule.name}</span>
-                          <span className="rule-url">{rule.url}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                <button
-                  className="create-button"
-                  onClick={() => {
-                    const newRule: HeaderRule = {
-                      id: `header-${Date.now()}`,
-                      enabled: false,
-                      url: ".*",
-                      type: headerType,
-                      headers: {},
-                      name: t("header.newRule"),
-                    };
-                    setHeaderRules([...headerRules, newRule]);
-                    setSelectedHeaderRule(newRule);
-                  }}
-                >
-                  <span className="icon">+</span>
-                  {t("header.newRule")}
-                </button>
-              </div>
-            </aside>
-
-            {selectedHeaderRule && (
-              <section className="editor-section">
-                <div className="form-group">
-                  <label htmlFor="header-name">{t("header.ruleName")}</label>
-                  <input
-                    id="header-name"
-                    type="text"
-                    value={selectedHeaderRule.name}
-                    onChange={(e) => {
-                      const updatedRule = {
-                        ...selectedHeaderRule,
-                        name: e.target.value,
-                      };
-                      setSelectedHeaderRule(updatedRule);
-                      const updatedRules = headerRules.map((r) =>
-                        r.id === updatedRule.id ? updatedRule : r
-                      );
-                      saveHeaderRules(updatedRules);
-                    }}
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="header-url">{t("header.urlPattern")}</label>
-                  <input
-                    id="header-url"
-                    type="text"
-                    value={selectedHeaderRule.url}
-                    onChange={(e) => {
-                      const updatedRule = {
-                        ...selectedHeaderRule,
-                        url: e.target.value,
-                      };
-                      setSelectedHeaderRule(updatedRule);
-                      const updatedRules = headerRules.map((r) =>
-                        r.id === updatedRule.id ? updatedRule : r
-                      );
-                      saveHeaderRules(updatedRules);
-                    }}
-                    placeholder={t("header.urlPatternPlaceholder")}
-                  />
-                </div>
-                <div className="form-group">
-                  <label>{t("header.headers")}</label>
-                  <div className="headers-list">
-                    {Object.entries(selectedHeaderRule.headers).map(
-                      ([key, value]) => (
-                        <div key={key} className="header-item">
-                          <input
-                            type="text"
-                            value={key}
-                            onChange={(e) => {
-                              const newHeaders = {
-                                ...selectedHeaderRule.headers,
-                              };
-                              delete newHeaders[key];
-                              newHeaders[e.target.value] = value;
-                              const updatedRule = {
-                                ...selectedHeaderRule,
-                                headers: newHeaders,
-                              };
-                              setSelectedHeaderRule(updatedRule);
-                              const updatedRules = headerRules.map((r) =>
-                                r.id === updatedRule.id ? updatedRule : r
-                              );
-                              saveHeaderRules(updatedRules);
-                            }}
-                            placeholder={t("header.headerName")}
-                          />
-                          <input
-                            type="text"
-                            value={value}
-                            onChange={(e) => {
-                              const updatedRule = {
-                                ...selectedHeaderRule,
-                                headers: {
-                                  ...selectedHeaderRule.headers,
-                                  [key]: e.target.value,
-                                },
-                              };
-                              setSelectedHeaderRule(updatedRule);
-                              const updatedRules = headerRules.map((r) =>
-                                r.id === updatedRule.id ? updatedRule : r
-                              );
-                              saveHeaderRules(updatedRules);
-                            }}
-                            placeholder={t("header.headerValue")}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const newHeaders = {
-                                ...selectedHeaderRule.headers,
-                              };
-                              delete newHeaders[key];
-                              const updatedRule = {
-                                ...selectedHeaderRule,
-                                headers: newHeaders,
-                              };
-                              setSelectedHeaderRule(updatedRule);
-                              const updatedRules = headerRules.map((r) =>
-                                r.id === updatedRule.id ? updatedRule : r
-                              );
-                              saveHeaderRules(updatedRules);
-                            }}
-                            className="delete-button"
-                          >
-                            ×
-                          </button>
-                        </div>
-                      )
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const updatedRule = {
-                          ...selectedHeaderRule,
-                          headers: {
-                            ...selectedHeaderRule.headers,
-                            "": "",
-                          },
-                        };
-                        setSelectedHeaderRule(updatedRule);
-                        const updatedRules = headerRules.map((r) =>
-                          r.id === updatedRule.id ? updatedRule : r
-                        );
-                        saveHeaderRules(updatedRules);
-                      }}
-                      className="create-button"
-                    >
-                      <span className="icon">+</span>
-                      {t("header.addHeader")}
-                    </button>
-                  </div>
-                </div>
-              </section>
-            )}
-          </div>
-        )}
+        {currentPanel === "header" && renderHeaderRules()}
       </main>
     </div>
   );
