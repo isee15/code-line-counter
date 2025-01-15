@@ -5,6 +5,22 @@
 ## 下载地址
 https://microsoftedge.microsoft.com/addons/detail/stylus/lmhdocknnhdcekdmjpheenofdadnopfg
 
+
+## 项目截图
+
+### 主界面
+![主界面](./modheader.jpg)
+*样式和函数管理的主界面*
+
+### 样式编辑器
+![样式编辑器](./eye.jpg)
+*强大的样式编辑功能*
+
+### 函数编辑器
+![函数编辑器](./vconsole.jpg)
+*JavaScript 函数编辑界面*
+
+
 ## 功能特点
 
 ### 样式管理
@@ -46,19 +62,6 @@ https://microsoftedge.microsoft.com/addons/detail/stylus/lmhdocknnhdcekdmjpheeno
 - 韩语
 - 英语
 
-## 项目截图
-
-### 主界面
-![主界面](./modeader.jpg)
-*样式和函数管理的主界面*
-
-### 样式编辑器
-![样式编辑器](./eye.jpg)
-*强大的样式编辑功能*
-
-### 函数编辑器
-![函数编辑器](./vconsole.jpg)
-*JavaScript 函数编辑界面*
 
 ## 技术栈
 
