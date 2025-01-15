@@ -2,6 +2,9 @@
 
 一个基于 WXT (Web Extension Tools) 开发的浏览器扩展，用于管理和修改网页样式与功能。通过简单的配置，你可以自定义网页的样式和行为，实现个性化的浏览体验。
 
+## 下载地址
+https://microsoftedge.microsoft.com/addons/detail/stylus/lmhdocknnhdcekdmjpheenofdadnopfg
+
 ## 功能特点
 
 ### 样式管理
@@ -32,6 +35,10 @@
   - 注入自定义代码
 - 规则优先级管理
 
+### 修改Http Header
+- 支持修改Http Header
+- 支持添加自定义Http Header
+
 ### 多语言支持
 - 简体中文
 - 繁体中文
@@ -42,15 +49,15 @@
 ## 项目截图
 
 ### 主界面
-![主界面](docs/images/main.png)
+![主界面](./modeader.jpg)
 *样式和函数管理的主界面*
 
 ### 样式编辑器
-![样式编辑器](docs/images/style-editor.png)
+![样式编辑器](./eye.jpg)
 *强大的样式编辑功能*
 
 ### 函数编辑器
-![函数编辑器](docs/images/function-editor.png)
+![函数编辑器](./vconsole.jpg)
 *JavaScript 函数编辑界面*
 
 ## 技术栈
