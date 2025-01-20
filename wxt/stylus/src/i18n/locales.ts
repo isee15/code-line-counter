@@ -24,6 +24,9 @@ export const translations: Translations = {
       import: '导入',
       importSuccess: '配置已导入',
       importFailure: '导入失败：无效的配置文件',
+      saved: '已保存',
+      saveFailed: '保存失败',
+      savedWithoutApply: '已保存（未应用到当前页面）',
     },
     app: {
       title: 'Stylus',
@@ -108,6 +111,9 @@ export const translations: Translations = {
       import: '導入',
       importSuccess: '配置已導入',
       importFailure: '導入失敗：無效的配置文件',
+      saved: '已儲存',
+      saveFailed: '儲存失敗',
+      savedWithoutApply: '已儲存（未套用到當前頁面）',
     },
     app: {
       title: 'Stylus',
@@ -192,6 +198,9 @@ export const translations: Translations = {
       import: 'インポート',
       importSuccess: '設定がインポートされました',
       importFailure: 'インポートに失敗しました：無効な設定ファイル',
+      saved: '保存しました',
+      saveFailed: '保存に失敗しました',
+      savedWithoutApply: '保存しました（現在のページに適用されていません）',
     },
     app: {
       title: 'Stylus',
@@ -276,6 +285,9 @@ export const translations: Translations = {
       import: '가져오기',
       importSuccess: '설정이 가져오기되었습니다',
       importFailure: '가져오기에 실패했습니다: 유효하지 않은 설정 파일',
+      saved: '저장됨',
+      saveFailed: '저장 실패',
+      savedWithoutApply: '저장됨 (현재 페이지에 적용되지 않음)',
     },
     app: {
       title: 'Stylus',
@@ -360,6 +372,9 @@ export const translations: Translations = {
       import: 'Import',
       importSuccess: 'Configuration imported successfully',
       importFailure: 'Import failed: Invalid configuration file',
+      saved: 'Saved',
+      saveFailed: 'Save failed',
+      savedWithoutApply: 'Saved (not applied to current page)',
     },
     app: {
       title: 'Stylus',

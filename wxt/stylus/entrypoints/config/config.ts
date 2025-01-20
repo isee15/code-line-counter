@@ -54,7 +54,7 @@ export const DEFAULT_TEMPLATES: StyleSheet[] = [
     id: "reading-mode",
     name: "阅读模式",
     css: `body {
-    max-width: 784px !important;
+    max-width: 800px !important;
     margin: 0 auto !important;
     padding: 20px !important;
     font-size: 18px !important;
@@ -96,6 +96,15 @@ export const DEFAULT_TEMPLATES: StyleSheet[] = [
   /* 调整输入框背景 */
   input, textarea, select {
     background-color: #d8f2dc !important;
+  }`,
+    enabled: false,
+  },
+  {
+    id: "water-mark",
+    name: "腾讯文档去水印",
+    css: `
+  #__clear_watermark_id {
+    display: none;
   }`,
     enabled: false,
   },
@@ -172,7 +181,7 @@ export const DEFAULT_RULES: ResourceRule[] = [
         const style = document.createElement('style');
         style.textContent = \`
           body {
-            max-width: 784px !important;
+            max-width: 800px !important;
             margin: 0 auto !important;
             padding: 20px !important;
             font-size: 18px !important;
@@ -204,28 +213,7 @@ export const DEFAULT_RULES: ResourceRule[] = [
     type: "block",
     name: "拦截聊天组件",
     description: "阻止网页客服聊天窗口",
-  },
-  {
-    id: "anti-debugger",
-    enabled: false,
-    url: ".*",
-    contentType: "text/html",
-    type: "inject",
-    function: `function() {
-        const noop = () => {};
-        Object.defineProperty(window, 'debugger', { get: noop, set: noop });
-        setInterval(() => {
-          const before = Date.now();
-          debugger;
-          const after = Date.now();
-          if (after - before > 100) {
-            console.log('检测到调试器暂停，已阻止');
-          }
-        }, 500);
-      }`,
-    name: "反调试保护",
-    description: "阻止网页的反调试措施",
-  },
+  }
 ];
 
 export const DEFAULT_HEADER_RULES: HeaderRule[] = [

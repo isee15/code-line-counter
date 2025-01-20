@@ -1,5 +1,5 @@
-import { LocaleKey } from "@/src/i18n/locales";
-import { HeaderRule } from "./config";
+import type { LocaleKey } from "@/src/i18n/locales";
+import type { HeaderRule } from "./config";
 
 // 获取语言显示文本
 export const getLocaleDisplayText = (locale: LocaleKey): string => {
