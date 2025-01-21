@@ -129,124 +129,148 @@ export const DEFAULT_RULES: ResourceRule[] = [
     name: "AI翻译",
     description: "选中文本后显示翻译按钮，点击可获取AI翻译结果",
     function: `function() {
-      // DeepSeek API 配置
-      const DEEPSEEK_API_URL = 'https://api.deepseek.com/chat/completions';
-      const DEEPSEEK_API_KEY = 'DEEPSEEK-KEY';
-      const PROMPT = '用中文和英文分别解释输入的内容，并给出单词示例。 输入：';
-      
-      // 创建样式
-      const style = document.createElement('style');
-      style.textContent = \`
-          .translator-button {
-              position: fixed;
-              display: none;
-              padding: 5px 10px;
-              background-color: #007bff;
-              color: white;
-              border: none;
-              border-radius: 3px;
-              cursor: pointer;
-              z-index: 10000;
-          }
-          .translator-result {
-              position: fixed;
-              display: none;
-              padding: 10px;
-              background-color: #f8f9fa;
-              border: 1px solid #dee2e6;
-              border-radius: 3px;
-              max-width: 300px;
-              z-index: 10001;
-          }
-      \`;
-      document.head.appendChild(style);
+    // DeepSeek API 配置
+    const DEEPSEEK_API_URL = 'https://api.deepseek.com/chat/completions';
+    const DEEPSEEK_API_KEY = 'DEEPSEEK-KEY';
+    const PROMPT = '用中文和英文分别解释输入的内容，并给出单词示例。 输入：$1';
+    
+    // 添加 marked 库
+    const markedScript = document.createElement('script');
+    markedScript.src = 'https://cdn.jsdelivr.net/npm/marked/marked.min.js';
+    document.head.appendChild(markedScript);
 
-      // 创建翻译按钮和结果显示元素
-      const translationButton = document.createElement('button');
-      translationButton.className = 'translator-button';
-      translationButton.textContent = 'Translate';
-      document.body.appendChild(translationButton);
+    // 创建样式
+    const style = document.createElement('style');
+    style.textContent = \`
+        .translator-button {
+            position: fixed;
+            display: none;
+            padding: 5px 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            z-index: 10000;
+        }
+        .translator-result {
+            position: fixed;
+            display: none;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 3px;
+            max-width: 500px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 10001;
+        }
+        .translator-result h1, .translator-result h2, .translator-result h3 {
+            margin-top: 10px;
+            margin-bottom: 5px;
+        }
+        .translator-result p {
+            margin-bottom: 10px;
+        }
+        .translator-result ul, .translator-result ol {
+            margin-left: 20px;
+            margin-bottom: 10px;
+        }
+        .translator-result code {
+            background-color: #f0f0f0;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+    \`;
+    document.head.appendChild(style);
 
-      const translationResult = document.createElement('div');
-      translationResult.className = 'translator-result';
-      document.body.appendChild(translationResult);
+    // 创建翻译按钮和结果显示元素
+    const translationButton = document.createElement('button');
+    translationButton.className = 'translator-button';
+    translationButton.textContent = 'Translate';
+    document.body.appendChild(translationButton);
 
-      let selectedText = '';
+    const translationResult = document.createElement('div');
+    translationResult.className = 'translator-result';
+    document.body.appendChild(translationResult);
 
-      document.addEventListener('mouseup', handleTextSelection);
-      translationButton.addEventListener('click', handleTranslation);
+    let selectedText = '';
 
-      function handleTextSelection(event) {
-          const selection = window.getSelection();
-          selectedText = selection.toString().trim();
+    document.addEventListener('mouseup', handleTextSelection);
+    translationButton.addEventListener('click', handleTranslation);
 
-          if (selectedText) {
-              const range = selection.getRangeAt(0);
-              const rect = range.getBoundingClientRect();
+    function handleTextSelection(event) {
+        const selection = window.getSelection();
+        selectedText = selection.toString().trim();
 
-              translationButton.style.left = \`\${rect.left + window.scrollX}px\`;
-              translationButton.style.top = \`\${rect.bottom + window.scrollY}px\`;
-              translationButton.style.display = 'block';
-              translationButton.textContent = 'Translate';
-              translationButton.disabled = false;
+        if (selectedText) {
+            const range = selection.getRangeAt(0);
+            const rect = range.getBoundingClientRect();
 
-              translationResult.style.display = 'none';
-          } else {
-              translationButton.style.display = 'none';
-              translationResult.style.display = 'none';
-          }
-      }
+            translationButton.style.left = (rect.left + window.scrollX) + 'px';
+            translationButton.style.top = (rect.bottom + window.scrollY) + 'px';
+            translationButton.style.display = 'block';
+            translationButton.textContent = '翻译';
+            translationButton.disabled = false;
 
-      async function handleTranslation() {
-          if (selectedText) {
-              translationButton.textContent = 'Translating...';
-              translationButton.disabled = true;
+            translationResult.style.display = 'none';
+        } else {
+            translationButton.style.display = 'none';
+            translationResult.style.display = 'none';
+        }
+    }
 
-              try {
-                  const translation = await translateText(selectedText);
-                  displayTranslation(translation);
-              } catch (error) {
-                  console.error('Translation error:', error);
-                  displayTranslation('Translation failed. Please try again.');
-              }
+    async function handleTranslation() {
+        if (selectedText) {
+            translationButton.textContent = 'Translating...';
+            translationButton.disabled = true;
 
-              translationButton.style.display = 'none';
-          }
-      }
+            try {
+                const translation = await translateText(selectedText);
+                displayTranslation(translation);
+            } catch (error) {
+                console.error('Translation error:', error);
+                displayTranslation('Translation failed. Please try again.');
+            }
 
-      async function translateText(text) {
-          const requestData = {
-              model: "deepseek-chat",
-              messages: [
-                  { role: "system", content: "You are a helpful assistant." },
-                  { role: "user", content: PROMPT + text }
-              ],
-              stream: false
-          };
-          
-          const response = await fetch(DEEPSEEK_API_URL, {
-              method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': \`Bearer \${DEEPSEEK_API_KEY}\`,
-              },
-              body: JSON.stringify(requestData)
-          });
+            translationButton.style.display = 'none';
+        }
+    }
 
-          if (!response.ok) {
-              throw new Error('Translation request failed');
-          }
+    async function translateText(text) {
+        const requestData = {
+            model: "deepseek-chat",
+            messages: [
+                { role: "system", content: "You are a helpful assistant." },
+                { role: "user", content: PROMPT.replace('$1', text) }
+            ],
+            stream: false
+        };
+        
+        const response = await fetch(DEEPSEEK_API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': "Bearer " + DEEPSEEK_API_KEY,
+            },
+            body: JSON.stringify(requestData)
+        });
 
-          const data = await response.json();
-          return data.choices[0].message.content;
-      }
+        if (!response.ok) {
+            throw new Error('Translation request failed');
+        }
 
-      function displayTranslation(translation) {
-          translationResult.textContent = translation;
-          translationResult.style.left = \`\${translationButton.style.left}\`;
-          translationResult.style.top = \`\${parseInt(translationButton.style.top) + 30}px\`;
-          translationResult.style.display = 'block';
-      }
+        const data = await response.json();
+        return data.choices[0].message.content;
+    }
+
+    function displayTranslation(translation) {
+        // 使用 marked 将 Markdown 转换为 HTML
+        translationResult.innerHTML = marked.parse(translation);
+        translationResult.style.left = translationButton.style.left;
+        translationResult.style.top = (parseInt(translationButton.style.top) + 30) + 'px';
+        translationResult.style.display = 'block';
+    }
 }`
   },
   {

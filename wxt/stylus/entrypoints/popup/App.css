@@ -567,7 +567,7 @@ input:checked + .toggle-slider:before {
 .form-group input,
 .form-group select,
 .form-group textarea {
-  width: 100%;
+  width: 95%;
   padding: 0.5rem;
   background: #3c3c3c;
   border: 1px solid #4c4c4c;
