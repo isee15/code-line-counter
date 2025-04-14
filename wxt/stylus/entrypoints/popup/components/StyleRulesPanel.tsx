@@ -5,6 +5,8 @@ import type { StyleSheet } from "../../config/config";
 import CodeMirror from "@uiw/react-codemirror";
 import { vscodeDark } from "@uiw/codemirror-theme-vscode";
 import { t } from "@/src/i18n/locales";
+import { useState, useEffect } from "react";
+
 export default function Index() {
   const [styleSheets, setStyleSheets] = useState<StyleSheet[]>([]);
   const [selectedSheet, setSelectedSheet] = useState<StyleSheet | null>(null);
@@ -22,13 +24,15 @@ export default function Index() {
         chrome.storage.local.set({ "stylus-sheets": DEFAULT_TEMPLATES });
       }
     });
-  });
+  }, []); // Added dependency array to prevent infinite loop
+  
   const handleAddNew = async () => {
     const newSheet: StyleSheet = {
       id: `sheet-${Date.now()}`,
       name: "新样式表",
       css: "",
       enabled: true,
+      url: "", // Add URL property
     };
     const updatedSheets = [...styleSheets, newSheet];
     setStyleSheets(updatedSheets);
@@ -76,23 +80,31 @@ export default function Index() {
             });
             setStatus(t("common.saved"));
           } catch (msgError) {
+            console.log("Error sending message to content script:", msgError);
             // 如果消息发送失败，说明content script可能未加载，尝试注入
-            await chrome.scripting.executeScript({
-              target: { tabId: tab.id },
-              files: ['content.js']
-            });
-            // 重试发送消息
-            await chrome.tabs.sendMessage(tab.id, {
-              type: "UPDATE_STYLES",
-              styles: updatedSheets,
-            });
-            setStatus(t("common.saved"));
+            try {
+              // Use the correct path to the content script relative to extension root
+              await chrome.scripting.executeScript({
+                target: { tabId: tab.id },
+                files: ['/content-scripts/content.js']  // Updated path to match WXT structure
+              });
+              // 重试发送消息
+              await chrome.tabs.sendMessage(tab.id, {
+                type: "UPDATE_STYLES",
+                styles: updatedSheets,
+              });
+              setStatus(t("common.saved"));
+            } catch (injectionError) {
+              console.error("Failed to inject content script:", injectionError);
+              setStatus(t("common.savedWithoutApply"));
+            }
           }
         } else {
           // 如果是chrome://页面或特殊页面，只保存不应用
           setStatus(t("common.savedWithoutApply"));
         }
       } catch (error) {
+        console.log("Error sending message to content script:", error);
         // 如果出现错误，至少保存了更改
         setStatus(t("common.savedWithoutApply"));
       }
@@ -140,7 +152,7 @@ export default function Index() {
         <div className="style-list">
           {styleSheets.map((sheet) => (
             // biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
-<div
+            <div
               key={sheet.id}
               className={`style-card ${
                 selectedSheet?.id === sheet.id ? "selected" : ""
@@ -156,7 +168,14 @@ export default function Index() {
                   />
                   <span className="toggle-slider" />
                 </label>
-                <span className="style-name">{sheet.name}</span>
+                <div className="style-info">
+                  <span className="style-name">{sheet.name}</span>
+                  {sheet.url && (
+                    <span className="style-url" title={sheet.url}>
+                      {sheet.url}
+                    </span>
+                  )}
+                </div>
               </div>
               <button
                 type="button"
@@ -188,6 +207,22 @@ export default function Index() {
               }
               className="sheet-name-input"
               placeholder={t("style.enterStyleName")}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="style-url">{t("rule.urlPattern")}</label>
+            <input
+              id="style-url"
+              type="text"
+              value={selectedSheet.url || ""}
+              onChange={(e) =>
+                setSelectedSheet({
+                  ...selectedSheet,
+                  url: e.target.value,
+                })
+              }
+              placeholder={t("rule.urlPatternPlaceholder")}
             />
           </div>
 

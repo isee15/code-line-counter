@@ -35,6 +35,7 @@ export default defineContentScript({
         }
 
         if (sheet.url && !location.href.match(new RegExp(sheet.url))) {
+          console.log(`样式表 ${sheet.name} 不匹配当前 URL`);
           continue;
         }
 
