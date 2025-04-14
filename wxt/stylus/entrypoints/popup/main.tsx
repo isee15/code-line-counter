@@ -1,10 +1,16 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App.tsx';
-import './style.css';
+import React from "react";
+import ReactDOM from "react-dom/client";
+import "../../styles/globals.css";
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-);
+import App from "./App";
+
+document.addEventListener("DOMContentLoaded", () => {
+  const rootElement = document.getElementById("root");
+  if (rootElement) {
+    ReactDOM.createRoot(rootElement).render(
+      <React.StrictMode>
+        <App />
+      </React.StrictMode>
+    );
+  }
+});

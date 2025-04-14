@@ -32,4 +32,25 @@ export default defineConfig({
     },
   },
   modules: ["@wxt-dev/module-react"],
+  entrypointsDir: "entrypoints", // 明确指定入口点目录
+  vite: () => ({
+    css: {
+      postcss: './postcss.config.cjs',
+    },
+    build: {
+      rollupOptions: {
+        output: {
+          inlineDynamicImports: false,
+          manualChunks: undefined
+        }
+      }
+    },
+    resolve: {
+      alias: {
+        '@': '.',
+        'components': './components',
+        'lib': './lib'
+      }
+    }
+  })
 });
