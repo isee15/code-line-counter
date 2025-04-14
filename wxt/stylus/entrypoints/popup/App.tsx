@@ -195,6 +195,32 @@ export default function App() {
             <span className="icon">📝</span>
             Headers
           </button>
+          <a 
+            href="https://billcat.cn/gmjz/#download" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="app-link"
+            style={{
+              marginLeft: 'auto',
+              color: '#1890ff',
+              textDecoration: 'none',
+              fontSize: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+            }}
+          >
+            <img 
+              src="icon/114.png" 
+              alt="乖猫记账图标" 
+              style={{
+                width: '16px',
+                height: '16px',
+                verticalAlign: 'middle',
+              }}
+            />
+            乖猫记账
+          </a>
         </nav>
       </header>
 
