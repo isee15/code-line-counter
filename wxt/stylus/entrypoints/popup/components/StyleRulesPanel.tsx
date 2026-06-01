@@ -31,7 +31,7 @@ export default function Index() {
       }
     });
   }, []); // Added dependency array to prevent infinite loop
-  
+
   const handleAddNew = async () => {
     const newSheet: StyleSheet = {
       id: `sheet-${Date.now()}`,
@@ -68,7 +68,7 @@ export default function Index() {
       const updatedSheets = styleSheets.map((sheet) =>
         sheet.id === normalizedSelectedSheet.id
           ? normalizedSelectedSheet
-          : localizeStyleSheet(sheet)
+          : localizeStyleSheet(sheet),
       );
       setStyleSheets(updatedSheets);
 
@@ -81,8 +81,8 @@ export default function Index() {
           active: true,
           currentWindow: true,
         });
-        
-        if (tab?.id && tab.url && !tab.url.startsWith('chrome://')) {
+
+        if (tab?.id && tab.url && !tab.url.startsWith("chrome://")) {
           try {
             await chrome.tabs.sendMessage(tab.id, {
               type: "UPDATE_STYLES",
@@ -96,7 +96,7 @@ export default function Index() {
               // Use the correct path to the content script relative to extension root
               await chrome.scripting.executeScript({
                 target: { tabId: tab.id },
-                files: ['/content-scripts/content.js']  // Updated path to match WXT structure
+                files: ["/content-scripts/content.js"], // Updated path to match WXT structure
               });
               // 重试发送消息
               await chrome.tabs.sendMessage(tab.id, {
@@ -129,8 +129,8 @@ export default function Index() {
   const handleToggleSheet = async (sheetId: string) => {
     const updatedSheets = styleSheets.map((sheet) =>
       localizeStyleSheet(
-        sheet.id === sheetId ? { ...sheet, enabled: !sheet.enabled } : sheet
-      )
+        sheet.id === sheetId ? { ...sheet, enabled: !sheet.enabled } : sheet,
+      ),
     );
     setStyleSheets(updatedSheets);
 
@@ -165,45 +165,45 @@ export default function Index() {
           {styleSheets.map((sheet) => {
             const localizedSheet = localizeStyleSheet(sheet);
             return (
-            // biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
-            <div
-              key={localizedSheet.id}
-              className={`style-card ${
-                selectedSheet?.id === localizedSheet.id ? "selected" : ""
-              }`}
-              onClick={() => handleSheetSelect(localizedSheet)}
-            >
-              <div className="style-card-header">
-                <label className="toggle">
-                  <input
-                    type="checkbox"
-                    checked={localizedSheet.enabled}
-                    onChange={() => handleToggleSheet(localizedSheet.id)}
-                  />
-                  <span className="toggle-slider" />
-                </label>
-                <div className="style-info">
-                  <span className="style-name">{localizedSheet.name}</span>
-                  {localizedSheet.url && (
-                    <span className="style-url" title={localizedSheet.url}>
-                      {localizedSheet.url}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDelete(localizedSheet.id);
-                }}
-                className="delete-button"
-                title={t("common.delete")}
+              // biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
+              <div
+                key={localizedSheet.id}
+                className={`style-card ${
+                  selectedSheet?.id === localizedSheet.id ? "selected" : ""
+                }`}
+                onClick={() => handleSheetSelect(localizedSheet)}
               >
-                ×
-              </button>
-            </div>
-          );
+                <div className="style-card-header">
+                  <label className="toggle">
+                    <input
+                      type="checkbox"
+                      checked={localizedSheet.enabled}
+                      onChange={() => handleToggleSheet(localizedSheet.id)}
+                    />
+                    <span className="toggle-slider" />
+                  </label>
+                  <div className="style-info">
+                    <span className="style-name">{localizedSheet.name}</span>
+                    {localizedSheet.url && (
+                      <span className="style-url" title={localizedSheet.url}>
+                        {localizedSheet.url}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(localizedSheet.id);
+                  }}
+                  className="delete-button"
+                  title={t("common.delete")}
+                >
+                  ×
+                </button>
+              </div>
+            );
           })}
         </div>
       </aside>
@@ -215,7 +215,7 @@ export default function Index() {
               type="text"
               value={localizedSelectedSheet.name}
               onChange={(e) =>
-                setSelectedSheet({
+                selectedSheet && setSelectedSheet({
                   ...selectedSheet,
                   name: e.target.value,
                   nameCustomized: true,
@@ -233,7 +233,7 @@ export default function Index() {
               type="text"
               value={localizedSelectedSheet.url || ""}
               onChange={(e) =>
-                setSelectedSheet({
+                selectedSheet && setSelectedSheet({
                   ...selectedSheet,
                   url: e.target.value,
                 })
@@ -249,7 +249,7 @@ export default function Index() {
               theme={vscodeDark}
               extensions={[css()]}
               onChange={(value: string) =>
-                setSelectedSheet({
+                selectedSheet && setSelectedSheet({
                   ...selectedSheet,
                   css: value,
                 })

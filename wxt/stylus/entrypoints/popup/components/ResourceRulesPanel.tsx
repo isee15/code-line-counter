@@ -8,6 +8,7 @@ import { javascript } from "@codemirror/lang-javascript";
 import CodeMirror from "@uiw/react-codemirror";
 import { vscodeDark } from "@uiw/codemirror-theme-vscode";
 import { t } from "@/src/i18n/locales";
+import { useEffect, useState } from "react";
 export default function Index() {
   const [rules, setRules] = useState<ResourceRule[]>([]);
   const [selectedRule, setSelectedRule] = useState<ResourceRule | null>(null);

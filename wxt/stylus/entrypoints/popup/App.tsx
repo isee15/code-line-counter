@@ -60,6 +60,9 @@ export default function App() {
     a.download = "stylus-config.json";
     a.click();
     URL.revokeObjectURL(url);
+
+    setStatus(t("common.export"));
+    window.setTimeout(() => setStatus(""), 2500);
   };
 
   // 导入配置
@@ -94,8 +97,10 @@ export default function App() {
         }
 
         setStatus(t("common.importSuccess"));
+        window.setTimeout(() => setStatus(""), 2500);
       } catch (error) {
         setStatus(t("common.importError"));
+        window.setTimeout(() => setStatus(""), 2500);
       }
     };
     reader.readAsText(file);
@@ -107,8 +112,45 @@ export default function App() {
         <div className="header-content">
           <div className="header-left">
             <h1 className="app-title">{t("app.title")}</h1>
+            <div className="title-links">
+              <a
+                href="https://github.com/isee15/code-line-counter/tree/main/wxt/stylus"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="title-icon-link"
+                title="GitHub"
+              >
+                <svg
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+                </svg>
+              </a>
+              <a
+                href="https://billcat.cn/gmjz/#download"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="title-icon-link"
+                title="乖猫记账-最强AI记账软件"
+              >
+                <img src="icon/114.png" alt="乖猫记账" width="15" height="15" />
+              </a>
+              <a
+                href="https://microsoftedge.microsoft.com/addons/detail/stylus/lmhdocknnhdcekdmjpheenofdadnopfg"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="title-icon-link"
+                title="Rate us ⭐"
+              >
+                ⭐
+              </a>
+            </div>
           </div>
-          
+
           <div className="header-right">
             <button
               onClick={handleExportConfig}
@@ -119,8 +161,11 @@ export default function App() {
               <Download size={16} />
               {t("common.export")}
             </button>
-            
-            <label className="toolbar-button import-label" title={t("common.import")}>
+
+            <label
+              className="toolbar-button import-label"
+              title={t("common.import")}
+            >
               <Upload size={16} />
               {t("common.import")}
               <input
@@ -139,7 +184,7 @@ export default function App() {
                 setLocale(newLocale);
                 setCurrentLocale(newLocale);
               }}
-              className="toolbar-button"
+              className="toolbar-button toolbar-select"
               title={t("app.switchLanguage")}
             >
               <option value="zh-CN">{getLocaleDisplayText("zh-CN")}</option>
@@ -150,7 +195,9 @@ export default function App() {
             </select>
           </div>
         </div>
-        
+
+        {status && <div className="status-message app-status">{status}</div>}
+
         <nav className="tab-nav">
           <button
             type="button"
@@ -195,59 +242,6 @@ export default function App() {
             <span className="icon">📝</span>
             Headers
           </button>
-          <a 
-            href="https://github.com/isee15/code-line-counter/tree/main/wxt/stylus" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="app-link"
-            style={{
-              marginLeft: 'auto',
-              color: '#1890ff',
-              textDecoration: 'none',
-              fontSize: '14px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-            }}
-            title="GitHub"
-          >
-            <svg 
-              width="16" 
-              height="16" 
-              viewBox="0 0 24 24" 
-              fill="currentColor"
-              style={{ display: 'block' }}
-            >
-              <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v 3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
-              />
-            </svg>
-            GitHub
-          </a>
-          <a 
-            href="https://billcat.cn/gmjz/#download" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="app-link"
-            style={{
-              color: '#1890ff',
-              textDecoration: 'none',
-              fontSize: '14px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-            }}
-          >
-            <img 
-              src="icon/114.png" 
-              alt="乖猫记账图标" 
-              style={{
-                width: '16px',
-                height: '16px',
-                verticalAlign: 'middle',
-              }}
-            />
-            乖猫记账
-          </a>
         </nav>
       </header>
 
