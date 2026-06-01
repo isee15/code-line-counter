@@ -2,6 +2,8 @@ interface Translation {
   [key: string]: string | Translation;
 }
 
+declare const chrome: any;
+
 interface Translations {
   [locale: string]: Translation;
 }
@@ -93,6 +95,57 @@ export const translations: Translations = {
       headerName: 'Header 名称',
       headerValue: 'Header 值',
     },
+    builtins: {
+      templates: {
+        forceSelect: { name: '允许选择复制' },
+        darkMode: { name: '深色模式' },
+        readingMode: { name: '阅读模式' },
+        eyeProtection: { name: '护眼模式' },
+        watermark: { name: '企鹅文档去水印' },
+      },
+      rules: {
+        vconsole: {
+          name: 'vConsole调试面板',
+          description: '在网页中注入调试工具，用于移动端调试',
+        },
+        aiTranslator: {
+          name: 'AI翻译',
+          description: '选中文本后显示翻译按钮，点击可获取AI翻译结果',
+        },
+        blockAnalytics: {
+          name: '拦截数据统计',
+          description: '阻止常见的网站统计和分析脚本',
+        },
+        blockAds: {
+          name: '拦截广告请求',
+          description: '阻止常见的广告加载请求',
+        },
+        darkMode: {
+          name: '全局深色模式',
+          description: '将所有网页转换为深色模式',
+        },
+        blockSocial: {
+          name: '拦截社交组件',
+          description: '阻止社交媒体分享按钮和跟踪组件',
+        },
+        blockVideoAds: {
+          name: '拦截视频广告',
+          description: '阻止视频网站的广告内容',
+        },
+        readingMode: {
+          name: '阅读模式',
+          description: '优化页面布局，提供更好的阅读体验',
+        },
+        blockCookieNotices: {
+          name: '拦截Cookie提示',
+          description: '阻止烦人的Cookie政策提示框',
+        },
+        blockChatWidgets: {
+          name: '拦截聊天组件',
+          description: '阻止网页客服聊天窗口',
+        },
+      },
+    },
   },
   'zh-TW': {
     common: {
@@ -179,6 +232,57 @@ export const translations: Translations = {
       addHeader: '新增 Header',
       headerName: 'Header 名稱',
       headerValue: 'Header 值',
+    },
+    builtins: {
+      templates: {
+        forceSelect: { name: '允許選擇複製' },
+        darkMode: { name: '深色模式' },
+        readingMode: { name: '閱讀模式' },
+        eyeProtection: { name: '護眼模式' },
+        watermark: { name: '企鵝文件去浮水印' },
+      },
+      rules: {
+        vconsole: {
+          name: 'vConsole 偵錯面板',
+          description: '在網頁中注入偵錯工具，用於行動端偵錯',
+        },
+        aiTranslator: {
+          name: 'AI 翻譯',
+          description: '選取文字後顯示翻譯按鈕，點擊即可取得 AI 翻譯結果',
+        },
+        blockAnalytics: {
+          name: '攔截數據統計',
+          description: '阻止常見的網站統計與分析腳本',
+        },
+        blockAds: {
+          name: '攔截廣告請求',
+          description: '阻止常見的廣告載入請求',
+        },
+        darkMode: {
+          name: '全域深色模式',
+          description: '將所有網頁轉換為深色模式',
+        },
+        blockSocial: {
+          name: '攔截社交元件',
+          description: '阻止社群媒體分享按鈕與追蹤元件',
+        },
+        blockVideoAds: {
+          name: '攔截影片廣告',
+          description: '阻止影音網站的廣告內容',
+        },
+        readingMode: {
+          name: '閱讀模式',
+          description: '最佳化頁面版面，提供更好的閱讀體驗',
+        },
+        blockCookieNotices: {
+          name: '攔截 Cookie 提示',
+          description: '阻止惱人的 Cookie 政策提示框',
+        },
+        blockChatWidgets: {
+          name: '攔截聊天元件',
+          description: '阻止網頁客服聊天視窗',
+        },
+      },
     },
   },
   'ja': {
@@ -267,6 +371,57 @@ export const translations: Translations = {
       headerName: 'Header 名',
       headerValue: 'Header 値',
     },
+    builtins: {
+      templates: {
+        forceSelect: { name: '選択・コピーを許可' },
+        darkMode: { name: 'ダークモード' },
+        readingMode: { name: '閲覧モード' },
+        eyeProtection: { name: '目に優しいモード' },
+        watermark: { name: 'Tencent Docs の透かしを削除' },
+      },
+      rules: {
+        vconsole: {
+          name: 'vConsole デバッグパネル',
+          description: 'モバイルデバッグ用のツールをページに注入します',
+        },
+        aiTranslator: {
+          name: 'AI 翻訳',
+          description: 'テキスト選択後に翻訳ボタンを表示し、AI 翻訳結果を取得します',
+        },
+        blockAnalytics: {
+          name: '分析スクリプトをブロック',
+          description: '一般的なアクセス解析・分析スクリプトをブロックします',
+        },
+        blockAds: {
+          name: '広告リクエストをブロック',
+          description: '一般的な広告読み込みリクエストをブロックします',
+        },
+        darkMode: {
+          name: 'グローバルダークモード',
+          description: 'すべてのWebページをダークモードに変換します',
+        },
+        blockSocial: {
+          name: 'ソーシャルウィジェットをブロック',
+          description: 'SNS共有ボタンとトラッキング部品をブロックします',
+        },
+        blockVideoAds: {
+          name: '動画広告をブロック',
+          description: '動画サイト上の広告コンテンツをブロックします',
+        },
+        readingMode: {
+          name: '閲覧モード',
+          description: 'ページレイアウトを最適化し、読みやすさを向上させます',
+        },
+        blockCookieNotices: {
+          name: 'Cookie通知をブロック',
+          description: '煩わしいCookieポリシー通知をブロックします',
+        },
+        blockChatWidgets: {
+          name: 'チャットウィジェットをブロック',
+          description: 'Webページ上のカスタマーサポートチャットをブロックします',
+        },
+      },
+    },
   },
   'ko': {
     common: {
@@ -353,6 +508,57 @@ export const translations: Translations = {
       addHeader: 'Header 추가',
       headerName: 'Header 이름',
       headerValue: 'Header 값',
+    },
+    builtins: {
+      templates: {
+        forceSelect: { name: '선택 및 복사 허용' },
+        darkMode: { name: '다크 모드' },
+        readingMode: { name: '읽기 모드' },
+        eyeProtection: { name: '눈 보호 모드' },
+        watermark: { name: 'Tencent Docs 워터마크 제거' },
+      },
+      rules: {
+        vconsole: {
+          name: 'vConsole 디버그 패널',
+          description: '모바일 디버깅용 도구를 웹페이지에 주입합니다',
+        },
+        aiTranslator: {
+          name: 'AI 번역',
+          description: '텍스트를 선택하면 번역 버튼을 표시하고 AI 번역 결과를 가져옵니다',
+        },
+        blockAnalytics: {
+          name: '분석 스크립트 차단',
+          description: '일반적인 웹 분석 및 통계 스크립트를 차단합니다',
+        },
+        blockAds: {
+          name: '광고 요청 차단',
+          description: '일반적인 광고 로드 요청을 차단합니다',
+        },
+        darkMode: {
+          name: '전체 다크 모드',
+          description: '모든 웹페이지를 다크 모드로 변환합니다',
+        },
+        blockSocial: {
+          name: '소셜 위젯 차단',
+          description: '소셜 미디어 공유 버튼과 추적 위젯을 차단합니다',
+        },
+        blockVideoAds: {
+          name: '동영상 광고 차단',
+          description: '동영상 사이트의 광고 콘텐츠를 차단합니다',
+        },
+        readingMode: {
+          name: '읽기 모드',
+          description: '페이지 레이아웃을 최적화해 더 나은 읽기 경험을 제공합니다',
+        },
+        blockCookieNotices: {
+          name: '쿠키 알림 차단',
+          description: '귀찮은 쿠키 정책 알림을 차단합니다',
+        },
+        blockChatWidgets: {
+          name: '채팅 위젯 차단',
+          description: '웹페이지의 고객지원 채팅 창을 차단합니다',
+        },
+      },
     },
   },
   'en-US': {
@@ -441,6 +647,57 @@ export const translations: Translations = {
       headerName: 'Header Name',
       headerValue: 'Header Value',
     },
+    builtins: {
+      templates: {
+        forceSelect: { name: 'Allow Selection & Copy' },
+        darkMode: { name: 'Dark Mode' },
+        readingMode: { name: 'Reading Mode' },
+        eyeProtection: { name: 'Eye Protection Mode' },
+        watermark: { name: 'Remove Tencent Docs Watermark' },
+      },
+      rules: {
+        vconsole: {
+          name: 'vConsole Debug Panel',
+          description: 'Inject a debugging tool into the page for mobile debugging',
+        },
+        aiTranslator: {
+          name: 'AI Translator',
+          description: 'Show a translate button after text selection and fetch AI translation results',
+        },
+        blockAnalytics: {
+          name: 'Block Analytics',
+          description: 'Block common analytics and tracking scripts',
+        },
+        blockAds: {
+          name: 'Block Ads',
+          description: 'Block common ad loading requests',
+        },
+        darkMode: {
+          name: 'Global Dark Mode',
+          description: 'Convert all web pages to dark mode',
+        },
+        blockSocial: {
+          name: 'Block Social Widgets',
+          description: 'Block social sharing buttons and tracking widgets',
+        },
+        blockVideoAds: {
+          name: 'Block Video Ads',
+          description: 'Block ad content on video websites',
+        },
+        readingMode: {
+          name: 'Reading Mode',
+          description: 'Optimize page layout for a better reading experience',
+        },
+        blockCookieNotices: {
+          name: 'Block Cookie Notices',
+          description: 'Block annoying cookie policy banners',
+        },
+        blockChatWidgets: {
+          name: 'Block Chat Widgets',
+          description: 'Block customer support chat widgets on web pages',
+        },
+      },
+    },
   },
 };
 
@@ -477,6 +734,23 @@ function getBrowserLanguage(): LocaleKey {
 
 let currentLocale: LocaleKey = getBrowserLanguage();
 
+function resolveTranslationValue(
+  locale: LocaleKey,
+  key: string
+): TranslationValue | undefined {
+  const keys = key.split('.');
+  let value: TranslationValue = translations[locale];
+
+  for (const k of keys) {
+    if (!value || typeof value !== 'object') {
+      return undefined;
+    }
+    value = value[k];
+  }
+
+  return value;
+}
+
 export function setLocale(locale: LocaleKey) {
   currentLocale = locale;
   // 可以选择将语言偏好保存到 storage
@@ -505,22 +779,17 @@ export async function initLocale(): Promise<void> {
 
 type TranslationValue = string | Translation;
 
-export function t(key: string): string {
-  const keys = key.split('.');
-  let value: TranslationValue = translations[currentLocale];
-  
-  for (const k of keys) {
-    if (!value || typeof value !== 'object') {
-      console.warn(`Translation key not found: ${key}`);
-      return key;
-    }
-    value = value[k];
-  }
-  
+export function tForLocale(locale: LocaleKey, key: string): string {
+  const value = resolveTranslationValue(locale, key);
+
   if (typeof value !== 'string') {
     console.warn(`Translation value is not a string: ${key}`);
     return key;
   }
-  
+
   return value;
+}
+
+export function t(key: string): string {
+  return tForLocale(currentLocale, key);
 } 

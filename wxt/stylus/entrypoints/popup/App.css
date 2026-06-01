@@ -257,7 +257,7 @@ textarea.code {
   align-items: flex-start;
   transition: all 0.2s ease;
   border: 1px solid transparent;
-  min-height: 42px;
+  min-height: 64px;
 }
 
 .style-card:hover,
@@ -1210,7 +1210,7 @@ input:checked + .slider:before {
   align-items: flex-start;
   transition: all 0.2s ease;
   border: 1px solid transparent;
-  min-height: 42px;
+  min-height: 64px;
 }
 
 .style-card:hover,

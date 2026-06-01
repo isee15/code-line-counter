@@ -2,6 +2,7 @@ import { DEFAULT_HEADER_RULES } from "../../config/config";
 import type { HeaderRule } from "../../config/config";
 import { t } from "@/src/i18n/locales";
 import { applyHeaderRules } from "../../config/storage";
+import { useEffect, useState } from "react";
 
 export default function Index() {
   const [headerRules, setHeaderRules] = useState<HeaderRule[]>([]);

@@ -1,5 +1,7 @@
 import {
-  DEFAULT_TEMPLATES} from "../../config/config";
+  getLocalizedDefaultTemplates,
+  localizeStyleSheet,
+} from "../../config/config";
 import { css } from "@codemirror/lang-css";
 import type { StyleSheet } from "../../config/config";
 import CodeMirror from "@uiw/react-codemirror";
@@ -11,17 +13,21 @@ export default function Index() {
   const [styleSheets, setStyleSheets] = useState<StyleSheet[]>([]);
   const [selectedSheet, setSelectedSheet] = useState<StyleSheet | null>(null);
   const [status, setStatus] = useState("");
+  const localizedSelectedSheet = selectedSheet
+    ? localizeStyleSheet(selectedSheet)
+    : null;
 
   useEffect(() => {
     // 加载样式表和规则
     chrome.storage.local.get("stylus-sheets").then((result) => {
       const savedStyles = result["stylus-sheets"];
       if (savedStyles) {
-        setStyleSheets(savedStyles);
+        setStyleSheets(savedStyles.map(localizeStyleSheet));
       } else {
         // 首次使用时加载预设模板
-        setStyleSheets(DEFAULT_TEMPLATES);
-        chrome.storage.local.set({ "stylus-sheets": DEFAULT_TEMPLATES });
+        const defaultTemplates = getLocalizedDefaultTemplates();
+        setStyleSheets(defaultTemplates);
+        chrome.storage.local.set({ "stylus-sheets": defaultTemplates });
       }
     });
   }, []); // Added dependency array to prevent infinite loop
@@ -57,8 +63,12 @@ export default function Index() {
     try {
       if (!selectedSheet) return;
 
+      const normalizedSelectedSheet = localizeStyleSheet(selectedSheet);
+
       const updatedSheets = styleSheets.map((sheet) =>
-        sheet.id === selectedSheet.id ? selectedSheet : sheet
+        sheet.id === normalizedSelectedSheet.id
+          ? normalizedSelectedSheet
+          : localizeStyleSheet(sheet)
       );
       setStyleSheets(updatedSheets);
 
@@ -118,7 +128,9 @@ export default function Index() {
 
   const handleToggleSheet = async (sheetId: string) => {
     const updatedSheets = styleSheets.map((sheet) =>
-      sheet.id === sheetId ? { ...sheet, enabled: !sheet.enabled } : sheet
+      localizeStyleSheet(
+        sheet.id === sheetId ? { ...sheet, enabled: !sheet.enabled } : sheet
+      )
     );
     setStyleSheets(updatedSheets);
 
@@ -150,29 +162,31 @@ export default function Index() {
         </button>
 
         <div className="style-list">
-          {styleSheets.map((sheet) => (
+          {styleSheets.map((sheet) => {
+            const localizedSheet = localizeStyleSheet(sheet);
+            return (
             // biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
             <div
-              key={sheet.id}
+              key={localizedSheet.id}
               className={`style-card ${
-                selectedSheet?.id === sheet.id ? "selected" : ""
+                selectedSheet?.id === localizedSheet.id ? "selected" : ""
               }`}
-              onClick={() => handleSheetSelect(sheet)}
+              onClick={() => handleSheetSelect(localizedSheet)}
             >
               <div className="style-card-header">
                 <label className="toggle">
                   <input
                     type="checkbox"
-                    checked={sheet.enabled}
-                    onChange={() => handleToggleSheet(sheet.id)}
+                    checked={localizedSheet.enabled}
+                    onChange={() => handleToggleSheet(localizedSheet.id)}
                   />
                   <span className="toggle-slider" />
                 </label>
                 <div className="style-info">
-                  <span className="style-name">{sheet.name}</span>
-                  {sheet.url && (
-                    <span className="style-url" title={sheet.url}>
-                      {sheet.url}
+                  <span className="style-name">{localizedSheet.name}</span>
+                  {localizedSheet.url && (
+                    <span className="style-url" title={localizedSheet.url}>
+                      {localizedSheet.url}
                     </span>
                   )}
                 </div>
@@ -181,7 +195,7 @@ export default function Index() {
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleDelete(sheet.id);
+                  handleDelete(localizedSheet.id);
                 }}
                 className="delete-button"
                 title={t("common.delete")}
@@ -189,20 +203,22 @@ export default function Index() {
                 ×
               </button>
             </div>
-          ))}
+          );
+          })}
         </div>
       </aside>
 
-      {selectedSheet && (
+      {localizedSelectedSheet && (
         <section className="editor-container">
           <div className="editor-header">
             <input
               type="text"
-              value={selectedSheet.name}
+              value={localizedSelectedSheet.name}
               onChange={(e) =>
                 setSelectedSheet({
                   ...selectedSheet,
                   name: e.target.value,
+                  nameCustomized: true,
                 })
               }
               className="sheet-name-input"
@@ -215,7 +231,7 @@ export default function Index() {
             <input
               id="style-url"
               type="text"
-              value={selectedSheet.url || ""}
+              value={localizedSelectedSheet.url || ""}
               onChange={(e) =>
                 setSelectedSheet({
                   ...selectedSheet,
@@ -228,7 +244,7 @@ export default function Index() {
 
           <div className="editor-wrapper">
             <CodeMirror
-              value={selectedSheet.css}
+              value={localizedSelectedSheet.css}
               height="100%"
               theme={vscodeDark}
               extensions={[css()]}

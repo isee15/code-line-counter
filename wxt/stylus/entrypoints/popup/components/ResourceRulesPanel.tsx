@@ -1,4 +1,8 @@
-import { DEFAULT_RULES } from "../../config/config";
+import {
+  DEFAULT_RULES,
+  getLocalizedDefaultRules,
+  localizeResourceRule,
+} from "../../config/config";
 import type { ResourceRule } from "../../config/config";
 import { javascript } from "@codemirror/lang-javascript";
 import CodeMirror from "@uiw/react-codemirror";
@@ -9,23 +13,31 @@ export default function Index() {
   const [selectedRule, setSelectedRule] = useState<ResourceRule | null>(null);
   const [editingRule, setEditingRule] = useState<ResourceRule | null>(null);
   const [status, setStatus] = useState<string>("");
+  const localizedSelectedRule = selectedRule
+    ? localizeResourceRule(selectedRule)
+    : null;
+  const localizedEditingRule = editingRule
+    ? localizeResourceRule(editingRule)
+    : null;
 
   const handleRuleSelect = (rule: ResourceRule) => {
     if (selectedRule?.id === rule.id) {
       setSelectedRule(null);
       setEditingRule(null);
     } else {
-      setSelectedRule(rule);
-      setEditingRule({ ...rule });
+      const localizedRule = localizeResourceRule(rule);
+      setSelectedRule(localizedRule);
+      setEditingRule({ ...localizedRule });
     }
   };
 
   // 资源规则相关函数
   const saveRules = async (updatedRules: ResourceRule[]) => {
     try {
+      const normalizedRules = updatedRules.map(localizeResourceRule);
       // 保存到 storage
-      await chrome.storage.local.set({ "resource-rules": updatedRules });
-      setRules(updatedRules);
+      await chrome.storage.local.set({ "resource-rules": normalizedRules });
+      setRules(normalizedRules);
       
       // 通知 background 更新规则
       try {
@@ -62,10 +74,10 @@ export default function Index() {
   const handleSave = () => {
     if (!editingRule || !selectedRule) return;
     const updatedRules = rules.map((rule) =>
-      rule.id === selectedRule.id ? editingRule : rule
+      rule.id === selectedRule.id ? localizeResourceRule(editingRule) : rule
     );
     saveRules(updatedRules);
-    setSelectedRule(editingRule);
+    setSelectedRule(localizeResourceRule(editingRule));
   };
 
   const updateEditingRule = (updates: Partial<ResourceRule>) => {
@@ -108,7 +120,7 @@ export default function Index() {
     chrome.storage.local.get("resource-rules").then((result) => {
       const savedRules = result["resource-rules"] || [];
       // 确保默认规则存在
-      const mergedRules = [...DEFAULT_RULES];
+      const mergedRules = getLocalizedDefaultRules();
 
       // 添加用户自定义规则
       for (const rule of savedRules) {
@@ -117,7 +129,10 @@ export default function Index() {
         } else {
           const existingRule = mergedRules.find((r) => r.id === rule.id);
           if (existingRule) {
-            existingRule.enabled = rule.enabled;
+            Object.assign(
+              existingRule,
+              localizeResourceRule({ ...existingRule, ...rule })
+            );
           }
         }
       }
@@ -137,35 +152,36 @@ export default function Index() {
         <div className="rule-list">
           {rules.map((rule) => {
             const isBuiltin = DEFAULT_RULES.find((r) => r.id === rule.id);
+            const localizedRule = localizeResourceRule(rule);
             return (
               // biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
 <div
-                key={rule.id}
+                key={localizedRule.id}
                 className={`rule-card ${
-                  selectedRule?.id === rule.id ? "selected" : ""
+                  selectedRule?.id === localizedRule.id ? "selected" : ""
                 }`}
-                onClick={() => handleRuleSelect(rule)}
+                onClick={() => handleRuleSelect(localizedRule)}
                 data-builtin={isBuiltin ? "true" : "false"}
               >
                 <div className="rule-card-header">
                   <label className="toggle">
                     <input
                       type="checkbox"
-                      checked={rule.enabled}
+                      checked={localizedRule.enabled}
                       onChange={(e) => {
                         e.stopPropagation();
-                        toggleRule(rule.id);
+                        toggleRule(localizedRule.id);
                       }}
                     />
                     <span className="toggle-slider" />
                   </label>
                   <div className="rule-info">
-                    <span className="rule-title" title={rule.name}>
-                      {rule.name || t("rule.unnamed")}
+                    <span className="rule-title" title={localizedRule.name}>
+                      {localizedRule.name || t("rule.unnamed")}
                     </span>
-                    {rule.url && (
-                      <span className="rule-url" title={rule.url}>
-                        {rule.url}
+                    {localizedRule.url && (
+                      <span className="rule-url" title={localizedRule.url}>
+                        {localizedRule.url}
                       </span>
                     )}
                   </div>
@@ -176,7 +192,7 @@ export default function Index() {
                     onClick={(e) => {
                       e.stopPropagation();
                       const updatedRules = rules.filter(
-                        (r) => r.id !== rule.id
+                        (r) => r.id !== localizedRule.id
                       );
                       saveRules(updatedRules);
                     }}
@@ -192,25 +208,30 @@ export default function Index() {
         </div>
       </aside>
 
-      {selectedRule && editingRule && (
+      {localizedSelectedRule && localizedEditingRule && (
         <section className="editor-container">
           <div className="editor-header">
             <input
               type="text"
-              value={editingRule.name}
-              onChange={(e) => updateEditingRule({ name: e.target.value })}
+              value={localizedEditingRule.name}
+              onChange={(e) =>
+                updateEditingRule({
+                  name: e.target.value,
+                  nameCustomized: true,
+                })
+              }
               className="sheet-name-input"
               placeholder={t("rule.unnamed")}
             />
           </div>
 
           <div className="editor-wrapper">
-            {selectedRule.description && (
+            {localizedSelectedRule.description && (
               <div className="rule-description">
-                <p>{selectedRule.description}</p>
+                <p>{localizedSelectedRule.description}</p>
               </div>
             )}
-            {selectedRule.id === "vconsole" ? (
+            {localizedSelectedRule.id === "vconsole" ? (
               <div className="form-group">
                 <p>{t("rule.vConsoleDescription")}</p>
               </div>
@@ -221,7 +242,7 @@ export default function Index() {
                   <input
                     id="rule-url"
                     type="text"
-                    value={editingRule.url}
+                    value={localizedEditingRule.url}
                     onChange={(e) => updateEditingRule({ url: e.target.value })}
                     placeholder={t("rule.urlPatternPlaceholder")}
                   />
@@ -233,7 +254,7 @@ export default function Index() {
                   </label>
                   <select
                     id="rule-content-type"
-                    value={editingRule.contentType}
+                    value={localizedEditingRule.contentType}
                     onChange={(e) =>
                       updateEditingRule({ contentType: e.target.value })
                     }
@@ -262,7 +283,7 @@ export default function Index() {
                   <label htmlFor="rule-type">{t("rule.ruleType")}</label>
                   <select
                     id="rule-type"
-                    value={editingRule.type}
+                    value={localizedEditingRule.type}
                     onChange={(e) =>
                       updateEditingRule({
                         type: e.target.value as ResourceRule["type"],
@@ -275,7 +296,7 @@ export default function Index() {
                   </select>
                 </div>
 
-                {editingRule.type === "modify" && (
+                {localizedEditingRule.type === "modify" && (
                   <div className="form-group">
                     <label htmlFor="rule-content">
                       {t("rule.replacementContent")}
@@ -306,7 +327,7 @@ export default function Index() {
                     </div>
                     <textarea
                       id="rule-content"
-                      value={editingRule.content || ""}
+                      value={localizedEditingRule.content || ""}
                       onChange={(e) =>
                         updateEditingRule({ content: e.target.value })
                       }
@@ -315,7 +336,7 @@ export default function Index() {
                   </div>
                 )}
 
-                {editingRule.type === "inject" && (
+                {localizedEditingRule.type === "inject" && (
                   <div className="form-group">
                     <label htmlFor="rule-function">
                       {t("rule.injectionFunction")}
@@ -352,7 +373,7 @@ export default function Index() {
                       </ul>
                     </div>
                     <CodeMirror
-                      value={editingRule.function || ""}
+                      value={localizedEditingRule.function || ""}
                       height="100%"
                       theme={vscodeDark}
                       extensions={[javascript()]}
@@ -371,9 +392,9 @@ export default function Index() {
               type="button"
               onClick={handleSave}
               className={`save-button ${
-                !editingRule.enabled ? "disabled" : ""
+                !localizedEditingRule.enabled ? "disabled" : ""
               }`}
-              disabled={!editingRule.enabled}
+              disabled={!localizedEditingRule.enabled}
             >
               {t("common.save")}
             </button>
