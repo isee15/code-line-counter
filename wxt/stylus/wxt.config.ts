@@ -3,9 +3,9 @@ import { defineConfig } from "wxt";
 export default defineConfig({
   extensionApi: "chrome",
   manifest: {
-    name: "Stylus",
+    name: "CatStylus",
     description: "__MSG_description__",
-    default_locale: "zh_CN",
+    default_locale: "en",
     permissions: [
       "activeTab",
       "storage",
